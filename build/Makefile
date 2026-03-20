@@ -177,6 +177,60 @@ src/main.cpp.s:
 	$(MAKE) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/renderer/PointCloudLayer.o: src/renderer/PointCloudLayer.cpp.o
+
+.PHONY : src/renderer/PointCloudLayer.o
+
+# target to build an object file
+src/renderer/PointCloudLayer.cpp.o:
+	$(MAKE) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.o
+.PHONY : src/renderer/PointCloudLayer.cpp.o
+
+src/renderer/PointCloudLayer.i: src/renderer/PointCloudLayer.cpp.i
+
+.PHONY : src/renderer/PointCloudLayer.i
+
+# target to preprocess a source file
+src/renderer/PointCloudLayer.cpp.i:
+	$(MAKE) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.i
+.PHONY : src/renderer/PointCloudLayer.cpp.i
+
+src/renderer/PointCloudLayer.s: src/renderer/PointCloudLayer.cpp.s
+
+.PHONY : src/renderer/PointCloudLayer.s
+
+# target to generate assembly for a file
+src/renderer/PointCloudLayer.cpp.s:
+	$(MAKE) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.s
+.PHONY : src/renderer/PointCloudLayer.cpp.s
+
+src/renderer/Renderer.o: src/renderer/Renderer.cpp.o
+
+.PHONY : src/renderer/Renderer.o
+
+# target to build an object file
+src/renderer/Renderer.cpp.o:
+	$(MAKE) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/renderer/Renderer.cpp.o
+.PHONY : src/renderer/Renderer.cpp.o
+
+src/renderer/Renderer.i: src/renderer/Renderer.cpp.i
+
+.PHONY : src/renderer/Renderer.i
+
+# target to preprocess a source file
+src/renderer/Renderer.cpp.i:
+	$(MAKE) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/renderer/Renderer.cpp.i
+.PHONY : src/renderer/Renderer.cpp.i
+
+src/renderer/Renderer.s: src/renderer/Renderer.cpp.s
+
+.PHONY : src/renderer/Renderer.s
+
+# target to generate assembly for a file
+src/renderer/Renderer.cpp.s:
+	$(MAKE) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/renderer/Renderer.cpp.s
+.PHONY : src/renderer/Renderer.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -192,6 +246,12 @@ help:
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/renderer/PointCloudLayer.o"
+	@echo "... src/renderer/PointCloudLayer.i"
+	@echo "... src/renderer/PointCloudLayer.s"
+	@echo "... src/renderer/Renderer.o"
+	@echo "... src/renderer/Renderer.i"
+	@echo "... src/renderer/Renderer.s"
 .PHONY : help
 
 

@@ -70,9 +70,35 @@ CMakeFiles/app.dir/src/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/app.dir/src/main.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/huojianyu/桌面/data/test/src/main.cpp -o CMakeFiles/app.dir/src/main.cpp.s
 
+CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: CMakeFiles/app.dir/flags.make
+CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../src/renderer/Renderer.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/huojianyu/桌面/data/test/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/app.dir/src/renderer/Renderer.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/app.dir/src/renderer/Renderer.cpp.o -c /home/huojianyu/桌面/data/test/src/renderer/Renderer.cpp
+
+CMakeFiles/app.dir/src/renderer/Renderer.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/app.dir/src/renderer/Renderer.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/huojianyu/桌面/data/test/src/renderer/Renderer.cpp > CMakeFiles/app.dir/src/renderer/Renderer.cpp.i
+
+CMakeFiles/app.dir/src/renderer/Renderer.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/app.dir/src/renderer/Renderer.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/huojianyu/桌面/data/test/src/renderer/Renderer.cpp -o CMakeFiles/app.dir/src/renderer/Renderer.cpp.s
+
+CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.o: CMakeFiles/app.dir/flags.make
+CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.o: ../src/renderer/PointCloudLayer.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/huojianyu/桌面/data/test/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.o -c /home/huojianyu/桌面/data/test/src/renderer/PointCloudLayer.cpp
+
+CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/huojianyu/桌面/data/test/src/renderer/PointCloudLayer.cpp > CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.i
+
+CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/huojianyu/桌面/data/test/src/renderer/PointCloudLayer.cpp -o CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.s
+
 CMakeFiles/app.dir/external/glad/src/glad.c.o: CMakeFiles/app.dir/flags.make
 CMakeFiles/app.dir/external/glad/src/glad.c.o: ../external/glad/src/glad.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/huojianyu/桌面/data/test/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/app.dir/external/glad/src/glad.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/huojianyu/桌面/data/test/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/app.dir/external/glad/src/glad.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/app.dir/external/glad/src/glad.c.o   -c /home/huojianyu/桌面/data/test/external/glad/src/glad.c
 
 CMakeFiles/app.dir/external/glad/src/glad.c.i: cmake_force
@@ -86,19 +112,23 @@ CMakeFiles/app.dir/external/glad/src/glad.c.s: cmake_force
 # Object files for target app
 app_OBJECTS = \
 "CMakeFiles/app.dir/src/main.cpp.o" \
+"CMakeFiles/app.dir/src/renderer/Renderer.cpp.o" \
+"CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.o" \
 "CMakeFiles/app.dir/external/glad/src/glad.c.o"
 
 # External object files for target app
 app_EXTERNAL_OBJECTS =
 
 app: CMakeFiles/app.dir/src/main.cpp.o
+app: CMakeFiles/app.dir/src/renderer/Renderer.cpp.o
+app: CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.o
 app: CMakeFiles/app.dir/external/glad/src/glad.c.o
 app: CMakeFiles/app.dir/build.make
 app: /usr/lib/x86_64-linux-gnu/libglfw.so.3.3
 app: /usr/lib/x86_64-linux-gnu/libGLX.so
 app: /usr/lib/x86_64-linux-gnu/libOpenGL.so
 app: CMakeFiles/app.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/huojianyu/桌面/data/test/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable app"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/huojianyu/桌面/data/test/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX executable app"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/app.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

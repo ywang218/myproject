@@ -1,8 +1,9 @@
 #version 430 core
 
+// 结构体对齐：16字节对齐是 OpenGL SSBO 的最佳实践
 struct Point {
-    vec4 pos;
-    vec4 color;
+    vec4 pos;   // 输入: x=距离r, y=水平角theta, z=垂直角phi
+    vec4 color; // 输入: x=反射强度Intensity, yzw=未使用
 };
 
 layout(std430, binding = 0) buffer PointBuffer {
@@ -11,16 +12,34 @@ layout(std430, binding = 0) buffer PointBuffer {
 
 uniform float uTime;
 
-// 这里的 256 是每个工作组的大小，对应 DispatchCompute 时的除数
+// 线程组大小：256 是大多数显卡的性能甜点位
 layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
 void main() {
     uint idx = gl_GlobalInvocationID.x;
     
-    // 基础运动：正弦波
-    float offset = sin(uTime + points[idx].pos.x * 0.5) * 0.01;
-    points[idx].pos.y += offset;
+    // 1. 获取 CPU 传来的原始雷达参数
+    float r = points[idx].pos.x;
+    float theta = points[idx].pos.y;
+    float phi = points[idx].pos.z;
+    float intensity = points[idx].color.x;
 
-    // 变色逻辑：根据高度改变 R 通道
-    points[idx].color.r = (points[idx].pos.y + 5.0) / 10.0;
+    // 2. 坐标转换公式 (Spherical to Cartesian)
+    // x = r * cos(phi) * cos(theta)
+    // y = r * sin(phi)
+    // z = r * cos(phi) * sin(theta)
+    
+    float cosPhi = cos(phi);
+    float x = r * cosPhi * cos(theta);
+    float y = r * sin(phi);
+    float z = r * cosPhi * sin(theta);
+
+    // 3. 原位写回转换后的 3D 坐标
+    points[idx].pos.xyz = vec3(x, y, z);
+    points[idx].pos.w = 1.0; // 齐次坐标
+
+    // 4. 根据强度和高度动态着色
+    // 模拟雷达扫描线的颜色渐变
+    float colorPulse = abs(sin(uTime + r * 0.1));
+    points[idx].color.rgb = vec4(intensity, colorPulse * 0.5, 1.0 - intensity, 1.0).rgb;
 }

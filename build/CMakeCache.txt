@@ -222,9 +222,6 @@ OPENGL_INCLUDE_DIR:PATH=/usr/include
 OPENGL_egl_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libEGL.so
 
 //Path to a library.
-OPENGL_gl_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libGL.so
-
-//Path to a library.
 OPENGL_glu_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libGLU.so
 
 //Path to a library.
@@ -328,6 +325,14 @@ CMAKE_GENERATOR_INSTANCE:INTERNAL=
 CMAKE_GENERATOR_PLATFORM:INTERNAL=
 //Name of generator toolset.
 CMAKE_GENERATOR_TOOLSET:INTERNAL=
+//Test CMAKE_HAVE_LIBC_PTHREAD
+CMAKE_HAVE_LIBC_PTHREAD:INTERNAL=
+//Have library pthreads
+CMAKE_HAVE_PTHREADS_CREATE:INTERNAL=
+//Have library pthread
+CMAKE_HAVE_PTHREAD_CREATE:INTERNAL=1
+//Have include pthread.h
+CMAKE_HAVE_PTHREAD_H:INTERNAL=1
 //Source directory with the top level CMakeLists.txt file for this
 // project
 CMAKE_HOME_DIRECTORY:INTERNAL=/home/huojianyu/桌面/data/test
@@ -395,6 +400,8 @@ CMAKE_UNAME:INTERNAL=/usr/bin/uname
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
 //Details about finding OpenGL
 FIND_PACKAGE_MESSAGE_DETAILS_OpenGL:INTERNAL=[/usr/lib/x86_64-linux-gnu/libOpenGL.so][/usr/lib/x86_64-linux-gnu/libGLX.so][/usr/include][c ][v()]
+//Details about finding Threads
+FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
 //ADVANCED property for variable: OPENGL_EGL_INCLUDE_DIR
 OPENGL_EGL_INCLUDE_DIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: OPENGL_GLX_INCLUDE_DIR
@@ -403,8 +410,6 @@ OPENGL_GLX_INCLUDE_DIR-ADVANCED:INTERNAL=1
 OPENGL_INCLUDE_DIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: OPENGL_egl_LIBRARY
 OPENGL_egl_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: OPENGL_gl_LIBRARY
-OPENGL_gl_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: OPENGL_glu_LIBRARY
 OPENGL_glu_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: OPENGL_glx_LIBRARY

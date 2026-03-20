@@ -1,1 +1,1 @@
-/usr/bin/c++     CMakeFiles/app.dir/src/main.cpp.o CMakeFiles/app.dir/external/glad/src/glad.c.o  -o app  /usr/lib/x86_64-linux-gnu/libglfw.so.3.3 -ldl /usr/lib/x86_64-linux-gnu/libGLX.so /usr/lib/x86_64-linux-gnu/libOpenGL.so 
+/usr/bin/c++     CMakeFiles/app.dir/src/main.cpp.o CMakeFiles/app.dir/src/renderer/Renderer.cpp.o CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.o CMakeFiles/app.dir/external/glad/src/glad.c.o  -o app  /usr/lib/x86_64-linux-gnu/libglfw.so.3.3 -ldl /usr/lib/x86_64-linux-gnu/libGLX.so /usr/lib/x86_64-linux-gnu/libOpenGL.so -lpthread 

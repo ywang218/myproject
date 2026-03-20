@@ -1,6 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/app.dir/external/glad/src/glad.c.o"
   "CMakeFiles/app.dir/src/main.cpp.o"
+  "CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.o"
+  "CMakeFiles/app.dir/src/renderer/Renderer.cpp.o"
   "app"
   "app.pdb"
 )
