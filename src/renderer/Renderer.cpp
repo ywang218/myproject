@@ -1,6 +1,9 @@
 #include "renderer/Renderer.hpp"
 #include "renderer/PointCloudLayer.hpp"
+#include "data/MockFrameGenerator.hpp"
+#include "renderer/BoxLayer.hpp"
 #include <iostream>
+#include <iomanip>
 
 // 全局/静态变量用于回调
 static Camera* g_camera = nullptr;
@@ -36,7 +39,9 @@ Renderer::Renderer(int w, int h) : width(w), height(h) {
     camera = std::make_unique<Camera>(glm::vec3(0, 30, 60));
     g_camera = camera.get(); // 供回调使用
 
-    pointCloud = std::make_unique<PointCloudLayer>(1000000);
+    // pointCloud = std::make_unique<PointCloudLayer>(1000000);
+    egoCarLayer = std::make_unique<BoxLayer>();
+    beltBatch = std::make_unique<BeltBatch>(200000);
 }
 
 Renderer::~Renderer() {
@@ -44,20 +49,52 @@ Renderer::~Renderer() {
 }
 
 void Renderer::run() {
+    MockFrameGenerator generator;
+    int frameCount = 0;
     while (!glfwWindowShouldClose(window)) {
         float currentTime = (float)glfwGetTime();
 
-        // 1. Update (数据处理)
-        pointCloud->update(currentTime);
+        MockFrame frame = generator.createFrame();
+        if (frameCount % 60 == 0) {
+            std::cout << "\033[1;32m[Frame Info]\033[0m " 
+                      << "Seq: " << frame.seq 
+                      << " | EgoX: " << std::fixed << std::setprecision(2) << frame.ego_pos.x
+                      << " | Vehicles: " << frame.polygons.size()
+                      << " | Lines: " << frame.polylines.size() << std::endl;
+        }
+        frameCount++;
+
+        // // 1. Update (数据处理)
+        // pointCloud->update(currentTime);
 
         // 2. Render (绘制)
         glClearColor(0.01f, 0.01f, 0.03f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // 2. 更新相机逻辑 (参数：位置, 偏航角, 跟随距离, 高度, 平滑系数)
+        camera->updateFollow(frame.ego_pos, 0.0f, 25.0f, 15.0f, 0.15f);
         glm::mat4 view = camera->GetViewMatrix();
         glm::mat4 proj = camera->GetProjectionMatrix((float)width, (float)height);
 
-        pointCloud->render(view, proj);
+        // pointCloud->render(view, proj);
+        egoCarLayer->render(frame.ego_pos, 0.0f, glm::vec3(4.0f, 2.0f, 1.5f), view, proj);
+
+
+        beltBatch->begin();
+        for (auto& line : frame.polylines) {
+            bool isDashed = (line.style.type == 3 || line.style.type == 4); // 简化逻辑
+            glm::vec3 color = glm::vec3(line.style.color); // MockFrameGenerator 已经转好了 vec4
+            
+            // 参考 JS AMap.js 的双线逻辑
+            if (line.style.type == 2) { // 假设 2 是双线
+                beltBatch->writeBelt(line.vertices, -0.3f, 0.5f, false, color);
+                beltBatch->writeBelt(line.vertices,  0.3f, 0.5f, false, color);
+            } else {
+                beltBatch->writeBelt(line.vertices, 0.0f, 0.5f, isDashed, color);
+            }
+        }
+        // 渲染
+        beltBatch->render(view, proj);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

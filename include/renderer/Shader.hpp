@@ -67,6 +67,11 @@ public:
         glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]);
     }
 
+    // 对应 GLSL 的 vec4 (RGBA)
+    void setVec4(const std::string &name, const glm::vec4 &value) const {
+        glUniform4fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]);
+    }
+
     // 对应 Three.js 的 Matrix4
     void setMat4(const std::string &name, const glm::mat4 &mat) const {
         glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat));

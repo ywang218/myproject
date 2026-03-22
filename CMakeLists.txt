@@ -42,6 +42,8 @@ find_package(Threads REQUIRED)
 # 3. 设置 Include 路径
 include_directories(
     include
+    include/renderer
+    include/data
     external/glad/include
 )
 
@@ -51,6 +53,7 @@ set(SRC_LIST
     src/main.cpp
     src/renderer/Renderer.cpp
     src/renderer/PointCloudLayer.cpp
+    src/data/MockFrameGenerator.cpp
     external/glad/src/glad.c  # <--- 关键实现
 )
 

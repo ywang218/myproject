@@ -5,8 +5,14 @@ CMakeFiles/app.dir/external/glad/src/glad.c.o: ../external/glad/include/KHR/khrp
 CMakeFiles/app.dir/external/glad/src/glad.c.o: ../external/glad/include/glad/glad.h
 CMakeFiles/app.dir/external/glad/src/glad.c.o: ../external/glad/src/glad.c
 
+CMakeFiles/app.dir/src/data/MockFrameGenerator.cpp.o: ../include/data/MockFrameGenerator.hpp
+CMakeFiles/app.dir/src/data/MockFrameGenerator.cpp.o: ../src/data/MockFrameGenerator.cpp
+
 CMakeFiles/app.dir/src/main.cpp.o: ../external/glad/include/KHR/khrplatform.h
 CMakeFiles/app.dir/src/main.cpp.o: ../external/glad/include/glad/glad.h
+CMakeFiles/app.dir/src/main.cpp.o: ../include/data/MockFrameGenerator.hpp
+CMakeFiles/app.dir/src/main.cpp.o: ../include/renderer/BeltBatch.hpp
+CMakeFiles/app.dir/src/main.cpp.o: ../include/renderer/BoxLayer.hpp
 CMakeFiles/app.dir/src/main.cpp.o: ../include/renderer/Camera.hpp
 CMakeFiles/app.dir/src/main.cpp.o: ../include/renderer/Renderer.hpp
 CMakeFiles/app.dir/src/main.cpp.o: ../include/renderer/Shader.hpp
@@ -20,6 +26,9 @@ CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.o: ../src/renderer/PointClou
 
 CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../external/glad/include/KHR/khrplatform.h
 CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../external/glad/include/glad/glad.h
+CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../include/data/MockFrameGenerator.hpp
+CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../include/renderer/BeltBatch.hpp
+CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../include/renderer/BoxLayer.hpp
 CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../include/renderer/Camera.hpp
 CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../include/renderer/PointCloudLayer.hpp
 CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../include/renderer/Renderer.hpp

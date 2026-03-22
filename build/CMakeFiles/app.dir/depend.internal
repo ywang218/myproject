@@ -5,9 +5,15 @@ CMakeFiles/app.dir/external/glad/src/glad.c.o
  ../external/glad/include/KHR/khrplatform.h
  ../external/glad/include/glad/glad.h
  /home/huojianyu/桌面/data/test/external/glad/src/glad.c
+CMakeFiles/app.dir/src/data/MockFrameGenerator.cpp.o
+ ../include/data/MockFrameGenerator.hpp
+ /home/huojianyu/桌面/data/test/src/data/MockFrameGenerator.cpp
 CMakeFiles/app.dir/src/main.cpp.o
  ../external/glad/include/KHR/khrplatform.h
  ../external/glad/include/glad/glad.h
+ ../include/data/MockFrameGenerator.hpp
+ ../include/renderer/BeltBatch.hpp
+ ../include/renderer/BoxLayer.hpp
  ../include/renderer/Camera.hpp
  ../include/renderer/Renderer.hpp
  ../include/renderer/Shader.hpp
@@ -21,6 +27,9 @@ CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.o
 CMakeFiles/app.dir/src/renderer/Renderer.cpp.o
  ../external/glad/include/KHR/khrplatform.h
  ../external/glad/include/glad/glad.h
+ ../include/data/MockFrameGenerator.hpp
+ ../include/renderer/BeltBatch.hpp
+ ../include/renderer/BoxLayer.hpp
  ../include/renderer/Camera.hpp
  ../include/renderer/PointCloudLayer.hpp
  ../include/renderer/Renderer.hpp

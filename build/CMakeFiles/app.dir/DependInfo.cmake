@@ -12,9 +12,12 @@ set(CMAKE_C_COMPILER_ID "GNU")
 # The include file search paths:
 set(CMAKE_C_TARGET_INCLUDE_PATH
   "../include"
+  "../include/renderer"
+  "../include/data"
   "../external/glad/include"
   )
 set(CMAKE_DEPENDS_CHECK_CXX
+  "/home/huojianyu/桌面/data/test/src/data/MockFrameGenerator.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/src/data/MockFrameGenerator.cpp.o"
   "/home/huojianyu/桌面/data/test/src/main.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/src/main.cpp.o"
   "/home/huojianyu/桌面/data/test/src/renderer/PointCloudLayer.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.o"
   "/home/huojianyu/桌面/data/test/src/renderer/Renderer.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/src/renderer/Renderer.cpp.o"
@@ -24,6 +27,8 @@ set(CMAKE_CXX_COMPILER_ID "GNU")
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "../include"
+  "../include/renderer"
+  "../include/data"
   "../external/glad/include"
   )
 

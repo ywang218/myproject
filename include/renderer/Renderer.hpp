@@ -3,6 +3,9 @@
 #include <GLFW/glfw3.h>  // 包含这个才能识别 GLFWwindow
 #include "Shader.hpp"
 #include "Camera.hpp"
+#include "BoxLayer.hpp"
+#include "BeltBatch.hpp"
+#include "data/MockFrameGenerator.hpp"
 #include <memory>
 
 // 前向声明，提高编译速度
@@ -22,6 +25,9 @@ private:
 
     std::unique_ptr<Camera> camera;
     std::unique_ptr<PointCloudLayer> pointCloud;
+    std::unique_ptr<MockFrameGenerator> mockFrameGenerator;
+    std::unique_ptr<BoxLayer> egoCarLayer;
+    std::unique_ptr<BeltBatch> beltBatch;
     // 所有的 Render Items (后期逐个复刻)
     // std::unique_ptr<BeltBatch> beltBatch; 
 

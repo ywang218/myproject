@@ -150,6 +150,33 @@ external/glad/src/glad.c.s:
 	$(MAKE) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/external/glad/src/glad.c.s
 .PHONY : external/glad/src/glad.c.s
 
+src/data/MockFrameGenerator.o: src/data/MockFrameGenerator.cpp.o
+
+.PHONY : src/data/MockFrameGenerator.o
+
+# target to build an object file
+src/data/MockFrameGenerator.cpp.o:
+	$(MAKE) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/data/MockFrameGenerator.cpp.o
+.PHONY : src/data/MockFrameGenerator.cpp.o
+
+src/data/MockFrameGenerator.i: src/data/MockFrameGenerator.cpp.i
+
+.PHONY : src/data/MockFrameGenerator.i
+
+# target to preprocess a source file
+src/data/MockFrameGenerator.cpp.i:
+	$(MAKE) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/data/MockFrameGenerator.cpp.i
+.PHONY : src/data/MockFrameGenerator.cpp.i
+
+src/data/MockFrameGenerator.s: src/data/MockFrameGenerator.cpp.s
+
+.PHONY : src/data/MockFrameGenerator.s
+
+# target to generate assembly for a file
+src/data/MockFrameGenerator.cpp.s:
+	$(MAKE) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/src/data/MockFrameGenerator.cpp.s
+.PHONY : src/data/MockFrameGenerator.cpp.s
+
 src/main.o: src/main.cpp.o
 
 .PHONY : src/main.o
@@ -243,6 +270,9 @@ help:
 	@echo "... external/glad/src/glad.o"
 	@echo "... external/glad/src/glad.i"
 	@echo "... external/glad/src/glad.s"
+	@echo "... src/data/MockFrameGenerator.o"
+	@echo "... src/data/MockFrameGenerator.i"
+	@echo "... src/data/MockFrameGenerator.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

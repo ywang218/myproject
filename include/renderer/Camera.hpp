@@ -1,37 +1,40 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <cmath> // 必须包含 cmath 才能使用 cos/sin
 
 class Camera {
 public:
-    // 基础属性 (对齐 Renderer.js 的初始值)
     glm::vec3 Position;
-    glm::vec3 Target = glm::vec3(0.0f);
-    glm::vec3 Up = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 Front;
+    glm::vec3 Up;
 
-    float Fov = 60.0f;
-    float Near = 0.1f;
-    float Far = 1000.0f;
-    bool isOrtho = false;
-    float orthoSize = 50.0f;
+    // 直接在头文件实现构造函数
+    Camera(glm::vec3 position = glm::vec3(0.0f, -60.0f, 20.0f)) 
+        : Position(position), Front(glm::vec3(1.0f, 0.0f, 0.0f)), Up(glm::vec3(0.0f, 0.0f, 1.0f)) {}
 
-    Camera(glm::vec3 pos = glm::vec3(0.0f, 15.0f, 25.0f)) : Position(pos) {}
-
-    // 对应 Three.js 的 updateProjectionMatrix()
-    glm::mat4 GetProjectionMatrix(float screenWidth, float screenHeight) {
-        float aspect = screenWidth / screenHeight;
-        if (!isOrtho) {
-            return glm::perspective(glm::radians(Fov), aspect, Near, Far);
-        } else {
-            // 对齐你的 _syncOrthoWithPerspective 逻辑
-            float h = orthoSize;
-            float w = h * aspect;
-            return glm::ortho(-w/2.0f, w/2.0f, -h/2.0f, h/2.0f, Near, Far);
-        }
+    // GetViewMatrix 实现
+    glm::mat4 GetViewMatrix() { 
+        return glm::lookAt(Position, Position + Front, Up); 
     }
-
-    // 对应 OrbitControls 的基本效果
-    glm::mat4 GetViewMatrix() {
-        return glm::lookAt(Position, Target, Up);
+    
+    // GetProjectionMatrix 实现
+    glm::mat4 GetProjectionMatrix(float w, float h) {
+        if (h == 0) return glm::mat4(1.0f); // 防止除零异常
+        return glm::perspective(glm::radians(60.0f), w / h, 0.1f, 1000.0f);
+    }
+    
+    // updateFollow 实现 (平滑跟随逻辑)
+    void updateFollow(glm::vec3 egoPos, float yaw, float dist, float height, float lerpFactor) {
+        // 1. 计算目标追随位置
+        glm::vec3 forward(cos(yaw), sin(yaw), 0.0f);
+        glm::vec3 targetPos = egoPos - forward * dist + glm::vec3(0, 0, height);
+        
+        // 2. 线性插值位置
+        Position = glm::mix(Position, targetPos, lerpFactor);
+        
+        // 3. 始终看向主车前方 10 米
+        glm::vec3 lookAtTarget = egoPos + forward * 10.0f;
+        Front = glm::normalize(lookAtTarget - Position);
     }
 };

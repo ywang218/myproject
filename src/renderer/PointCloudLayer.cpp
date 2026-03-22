@@ -171,7 +171,7 @@ PointCloudLayer::~PointCloudLayer() {
 }
 
 void PointCloudLayer::dataProducerWorker() {
-    while (keepRunning) {
+    // while (keepRunning) {
         for (int i = 0; i < pointCount; i++) {
             sharedMappedPtr[i].pos[0] = 10.0f + (float)(rand() % 2000) / 40.0f;
             sharedMappedPtr[i].pos[1] = (float)(rand() % 628) / 100.0f;
@@ -179,7 +179,7 @@ void PointCloudLayer::dataProducerWorker() {
             sharedMappedPtr[i].color[0] = 0.5f + (float)(rand() % 50) / 100.0f;
         }
         std::this_thread::yield(); 
-    }
+    // }
 }
 
 void PointCloudLayer::update(float currentTime) {
