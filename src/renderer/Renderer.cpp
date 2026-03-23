@@ -3,6 +3,7 @@
 #include "data/MockFrameGenerator.hpp"
 #include "renderer/BoxLayer.hpp"
 #include "renderer/ObstacleLayer.hpp"
+#include "renderer/ObstacleEdgeLayer.hpp"
 #include <iostream>
 #include <iomanip>
 
@@ -34,6 +35,11 @@ Renderer::Renderer(int w, int h) : width(w), height(h) {
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE);
+    // --- 新增：开启混合 (Alpha Blending) ---
+    glEnable(GL_BLEND);
+    // 设置混合公式：结果 = (源颜色 * 源Alpha) + (目标颜色 * (1 - 源Alpha))
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // ------------------------------------
     glfwSwapInterval(0); // 关闭垂直同步
 
     // 初始化相机和图层
@@ -45,6 +51,7 @@ Renderer::Renderer(int w, int h) : width(w), height(h) {
     egoCarEdgeLayer = std::make_unique<EdgeBoxLayer>();
     beltBatch = std::make_unique<BeltBatch>(200000);
     obstacles = std::make_unique<ObstacleLayer>(300);
+    edges = std::make_unique<ObstacleEdgeLayer>(300);
 }
 
 Renderer::~Renderer() {
@@ -123,6 +130,9 @@ void Renderer::run() {
 
         obstacles->updateData(frame.polygons); // 传入 Mock 数据
         obstacles->render(view, proj);         // 绘制
+
+        edges->updateData(frame.polygons);
+        edges->render(view, proj);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

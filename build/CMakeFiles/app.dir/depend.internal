@@ -16,6 +16,7 @@ CMakeFiles/app.dir/src/main.cpp.o
  ../include/renderer/BoxLayer.hpp
  ../include/renderer/Camera.hpp
  ../include/renderer/EdgeBoxLayer.hpp
+ ../include/renderer/ObstacleEdgeLayer.hpp
  ../include/renderer/ObstacleLayer.hpp
  ../include/renderer/Renderer.hpp
  ../include/renderer/Shader.hpp
@@ -34,6 +35,7 @@ CMakeFiles/app.dir/src/renderer/Renderer.cpp.o
  ../include/renderer/BoxLayer.hpp
  ../include/renderer/Camera.hpp
  ../include/renderer/EdgeBoxLayer.hpp
+ ../include/renderer/ObstacleEdgeLayer.hpp
  ../include/renderer/ObstacleLayer.hpp
  ../include/renderer/PointCloudLayer.hpp
  ../include/renderer/Renderer.hpp

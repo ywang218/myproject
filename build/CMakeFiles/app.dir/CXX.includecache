@@ -68,6 +68,22 @@ renderer/Shader.hpp
 memory
 -
 
+../include/renderer/ObstacleEdgeLayer.hpp
+glad/glad.h
+-
+glm/glm.hpp
+-
+glm/gtc/type_ptr.hpp
+-
+vector
+-
+memory
+-
+renderer/Shader.hpp
+../include/renderer/renderer/Shader.hpp
+data/MockFrameGenerator.hpp
+../include/renderer/data/MockFrameGenerator.hpp
+
 ../include/renderer/ObstacleLayer.hpp
 glad/glad.h
 -
@@ -115,6 +131,8 @@ EdgeBoxLayer.hpp
 ../include/renderer/EdgeBoxLayer.hpp
 ObstacleLayer.hpp
 ../include/renderer/ObstacleLayer.hpp
+ObstacleEdgeLayer.hpp
+../include/renderer/ObstacleEdgeLayer.hpp
 BeltBatch.hpp
 ../include/renderer/BeltBatch.hpp
 data/MockFrameGenerator.hpp
@@ -138,22 +156,6 @@ sstream
 iostream
 -
 
-/home/huojianyu/桌面/data/test/src/data/MockFrameGenerator.cpp
-data/MockFrameGenerator.hpp
-/home/huojianyu/桌面/data/test/src/data/data/MockFrameGenerator.hpp
-cmath
--
-ctime
--
-algorithm
--
-map
--
-
-/home/huojianyu/桌面/data/test/src/main.cpp
-renderer/Renderer.hpp
-/home/huojianyu/桌面/data/test/src/renderer/Renderer.hpp
-
 /home/huojianyu/桌面/data/test/src/renderer/Renderer.cpp
 renderer/Renderer.hpp
 /home/huojianyu/桌面/data/test/src/renderer/renderer/Renderer.hpp
@@ -165,6 +167,8 @@ renderer/BoxLayer.hpp
 /home/huojianyu/桌面/data/test/src/renderer/renderer/BoxLayer.hpp
 renderer/ObstacleLayer.hpp
 /home/huojianyu/桌面/data/test/src/renderer/renderer/ObstacleLayer.hpp
+renderer/ObstacleEdgeLayer.hpp
+/home/huojianyu/桌面/data/test/src/renderer/renderer/ObstacleEdgeLayer.hpp
 iostream
 -
 iomanip
