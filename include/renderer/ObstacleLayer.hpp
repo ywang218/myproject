@@ -57,6 +57,7 @@ public:
         glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, totalStride, (void*)sizeof(glm::mat4));
         glVertexAttribDivisor(5, 1); 
 
+        dataPayload.reserve(maxSize * 20);
         // 加载 Shader (你需要新建这两个文件)
         shader = std::make_unique<Shader>("shaders/obstacle.vert", "shaders/obstacle.frag");
     }
@@ -82,10 +83,13 @@ public:
 
     //     std::cout << "------------------------------------------" << std::endl;
         currentCount = std::min((int)obstacles.size(), maxSize);
+
         if (currentCount == 0) return;
 
-        std::vector<float> dataPayload;
-        dataPayload.reserve(currentCount * 20);
+        // std::vector<float> dataPayload;
+        // dataPayload.reserve(currentCount * 20);
+
+        dataPayload.clear();
 
         for (int i = 0; i < currentCount; i++) {
             const auto& obs = obstacles[i];
@@ -95,16 +99,32 @@ public:
             model = glm::scale(model, obs.size);
 
             const float* mPtr = glm::value_ptr(model);
-            for(int j=0; j<16; j++) dataPayload.push_back(mPtr[j]);
+            dataPayload.insert(dataPayload.end(), mPtr, mPtr + 16);
 
+            // 写入颜色 (4 floats)
             dataPayload.push_back(obs.style.color.r);
             dataPayload.push_back(obs.style.color.g);
             dataPayload.push_back(obs.style.color.b);
-            dataPayload.push_back(0.6f); // Alpha
+            dataPayload.push_back(0.6f);
+            // for(int j=0; j<16; j++) dataPayload.push_back(mPtr[j]);
+
+            // dataPayload.push_back(obs.style.color.r);
+            // dataPayload.push_back(obs.style.color.g);
+            // dataPayload.push_back(obs.style.color.b);
+            // dataPayload.push_back(0.6f); // Alpha
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        
+        // 关键：传 NULL 告诉驱动程序“旧数据不要了，直接给我在显存开新空间”
+        // 这样 CPU 就不需要等待上一帧渲染结束，彻底消除卡顿
+        size_t totalBufferSize = maxSize * (sizeof(glm::mat4) + sizeof(glm::vec4));
+        glBufferData(GL_ARRAY_BUFFER, totalBufferSize, nullptr, GL_DYNAMIC_DRAW); 
+
+        // 上传新数据
         glBufferSubData(GL_ARRAY_BUFFER, 0, dataPayload.size() * sizeof(float), dataPayload.data());
+            
+        // glBufferSubData(GL_ARRAY_BUFFER, 0, dataPayload.size() * sizeof(float), dataPayload.data());
     }
 
     // 渲染函数
@@ -127,4 +147,6 @@ private:
     int maxSize;
     int currentCount;
     std::unique_ptr<Shader> shader;
+
+    std::vector<float> dataPayload;
 };

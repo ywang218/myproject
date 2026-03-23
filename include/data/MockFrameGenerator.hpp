@@ -128,7 +128,7 @@ private:
     std::vector<Vehicle> vehicles;      // 存储原始车辆状态
     std::vector<Polyline> staticLanes;  // 存储预生成的静态地图
     std::vector<float> pointCloudBuffer; // 存储 100w 个点 (x, y, z, w)
-    void updatePointCloud(glm::vec3 egoPos);
+    // void updatePointCloud(glm::vec3 egoPos);
 
     // 内部辅助函数 (必须在这里声明，.cpp 才能实现)
     void initStaticMap();               // 初始化分叉路口和车道

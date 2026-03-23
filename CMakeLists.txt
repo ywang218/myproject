@@ -30,6 +30,18 @@ cmake_minimum_required(VERSION 3.10)
 set(OpenGL_GL_PREFERENCE GLVND)
 project(PointCloud)
 
+# --- 新增：强制默认使用 Release 模式 ---
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+endif()
+
+# --- 新增：针对 GCC/Clang 的优化参数 ---
+if(MSVC)
+    add_compile_options(/O2 /Ot) # Windows 优化
+else()
+    add_compile_options(-O3 -march=native -ffast-math) # Linux/Mac 极致优化
+endif()
+
 # 1. 强制 C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

@@ -201,16 +201,16 @@ void MockFrameGenerator::initVehicles() {
     }
 }
 
-void MockFrameGenerator::updatePointCloud(glm::vec3 egoPos) {
-    for (int i = 0; i < 1000000; ++i) {
-        int idx = i * 4;
-        // 在主车周围随机分布 (例如前后 100m，左右 50m)
-        pointCloudBuffer[idx]     = egoPos.x + (rand() % 2000 - 1000) * 0.1f;
-        pointCloudBuffer[idx + 1] = egoPos.y + (rand() % 1000 - 500) * 0.1f;
-        pointCloudBuffer[idx + 2] = (rand() % 100) * 0.05f - 2.0f; // 地面附近
-        pointCloudBuffer[idx + 3] = 1.0f; // 强度/颜色占位
-    }
-}
+// void MockFrameGenerator::updatePointCloud(glm::vec3 egoPos) {
+//     for (int i = 0; i < 1000000; ++i) {
+//         int idx = i * 4;
+//         // 在主车周围随机分布 (例如前后 100m，左右 50m)
+//         pointCloudBuffer[idx]     = egoPos.x + (rand() % 2000 - 1000) * 0.1f;
+//         pointCloudBuffer[idx + 1] = egoPos.y + (rand() % 1000 - 500) * 0.1f;
+//         pointCloudBuffer[idx + 2] = (rand() % 100) * 0.05f - 2.0f; // 地面附近
+//         pointCloudBuffer[idx + 3] = 1.0f; // 强度/颜色占位
+//     }
+// }
 
 MockFrame MockFrameGenerator::createFrame() {
     MockFrame frame;
@@ -233,7 +233,7 @@ MockFrame MockFrameGenerator::createFrame() {
     frame.polylines = staticLanes;
     
     // 4. point cloud
-    updatePointCloud(frame.ego_pos);
+    // updatePointCloud(frame.ego_pos);
     frame.point_data = pointCloudBuffer.data();
     frame.point_count = 1000000;
     return frame;

@@ -54,18 +54,40 @@ Renderer::~Renderer() {
 void Renderer::run() {
     MockFrameGenerator generator;
     int frameCount = 0;
+    double lastTime = glfwGetTime();
+    int nbFrames = 0;
+
+    // 确保这里关闭了垂直同步
+    glfwSwapInterval(0);
     while (!glfwWindowShouldClose(window)) {
         float currentTime = (float)glfwGetTime();
+        nbFrames++;
+        
+        // 如果距离上次更新超过 1 秒
+        if (currentTime - lastTime >= 1.0) {
+            double fps = double(nbFrames) / (currentTime - lastTime);
+            
+            // 构造新的标题字符串
+            // 使用 (int)fps 让数字看起来更整洁，不跳动
+            std::string newTitle = "AutoDrive Engine C++ | FPS: " + std::to_string((int)fps);
+            
+            // 更新窗口标题
+            glfwSetWindowTitle(window, newTitle.c_str());
+
+            // 重置计数器
+            nbFrames = 0;
+            lastTime = currentTime;
+        } 
 
         MockFrame frame = generator.createFrame();
-        // if (frameCount % 60 == 0) {
-        //     std::cout << "\033[1;32m[Frame Info]\033[0m " 
-        //               << "Seq: " << frame.seq 
-        //               << " | EgoX: " << std::fixed << std::setprecision(2) << frame.ego_pos.x
-        //               << " | Vehicles: " << frame.polygons.size()
-        //               << " | Lines: " << frame.polylines.size() << std::endl;
-        // }
-        // frameCount++;
+        if (frameCount % 60 == 0) {
+            std::cout << "\033[1;32m[Frame Info]\033[0m " 
+                      << "Seq: " << frame.seq 
+                      << " | EgoX: " << std::fixed << std::setprecision(2) << frame.ego_pos.x
+                      << " | Vehicles: " << frame.polygons.size()
+                      << " | Lines: " << frame.polylines.size() << std::endl;
+        }
+        frameCount++;
 
         // // 1. Update (数据处理)
         // pointCloud->update(currentTime);
