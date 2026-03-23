@@ -58,6 +58,32 @@ glm/gtc/matrix_transform.hpp
 cmath
 -
 
+../include/renderer/EdgeBoxLayer.hpp
+glad/glad.h
+-
+glm/glm.hpp
+-
+renderer/Shader.hpp
+../include/renderer/renderer/Shader.hpp
+memory
+-
+
+../include/renderer/ObstacleLayer.hpp
+glad/glad.h
+-
+glm/glm.hpp
+-
+glm/gtc/type_ptr.hpp
+-
+vector
+-
+memory
+-
+renderer/Shader.hpp
+../include/renderer/renderer/Shader.hpp
+data/MockFrameGenerator.hpp
+../include/renderer/data/MockFrameGenerator.hpp
+
 ../include/renderer/PointCloudLayer.hpp
 glad/glad.h
 -
@@ -85,6 +111,10 @@ Camera.hpp
 ../include/renderer/Camera.hpp
 BoxLayer.hpp
 ../include/renderer/BoxLayer.hpp
+EdgeBoxLayer.hpp
+../include/renderer/EdgeBoxLayer.hpp
+ObstacleLayer.hpp
+../include/renderer/ObstacleLayer.hpp
 BeltBatch.hpp
 ../include/renderer/BeltBatch.hpp
 data/MockFrameGenerator.hpp
@@ -108,6 +138,10 @@ sstream
 iostream
 -
 
+/home/huojianyu/桌面/data/test/src/main.cpp
+renderer/Renderer.hpp
+/home/huojianyu/桌面/data/test/src/renderer/Renderer.hpp
+
 /home/huojianyu/桌面/data/test/src/renderer/Renderer.cpp
 renderer/Renderer.hpp
 /home/huojianyu/桌面/data/test/src/renderer/renderer/Renderer.hpp
@@ -117,6 +151,8 @@ data/MockFrameGenerator.hpp
 /home/huojianyu/桌面/data/test/src/renderer/data/MockFrameGenerator.hpp
 renderer/BoxLayer.hpp
 /home/huojianyu/桌面/data/test/src/renderer/renderer/BoxLayer.hpp
+renderer/ObstacleLayer.hpp
+/home/huojianyu/桌面/data/test/src/renderer/renderer/ObstacleLayer.hpp
 iostream
 -
 iomanip

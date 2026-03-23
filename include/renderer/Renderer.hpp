@@ -4,6 +4,8 @@
 #include "Shader.hpp"
 #include "Camera.hpp"
 #include "BoxLayer.hpp"
+#include "EdgeBoxLayer.hpp"
+#include "ObstacleLayer.hpp"
 #include "BeltBatch.hpp"
 #include "data/MockFrameGenerator.hpp"
 #include <memory>
@@ -27,7 +29,9 @@ private:
     std::unique_ptr<PointCloudLayer> pointCloud;
     std::unique_ptr<MockFrameGenerator> mockFrameGenerator;
     std::unique_ptr<BoxLayer> egoCarLayer;
+    std::unique_ptr<EdgeBoxLayer> egoCarEdgeLayer;
     std::unique_ptr<BeltBatch> beltBatch;
+    std::unique_ptr<ObstacleLayer> obstacles;
     // 所有的 Render Items (后期逐个复刻)
     // std::unique_ptr<BeltBatch> beltBatch; 
 

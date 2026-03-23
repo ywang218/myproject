@@ -14,6 +14,8 @@ CMakeFiles/app.dir/src/main.cpp.o: ../include/data/MockFrameGenerator.hpp
 CMakeFiles/app.dir/src/main.cpp.o: ../include/renderer/BeltBatch.hpp
 CMakeFiles/app.dir/src/main.cpp.o: ../include/renderer/BoxLayer.hpp
 CMakeFiles/app.dir/src/main.cpp.o: ../include/renderer/Camera.hpp
+CMakeFiles/app.dir/src/main.cpp.o: ../include/renderer/EdgeBoxLayer.hpp
+CMakeFiles/app.dir/src/main.cpp.o: ../include/renderer/ObstacleLayer.hpp
 CMakeFiles/app.dir/src/main.cpp.o: ../include/renderer/Renderer.hpp
 CMakeFiles/app.dir/src/main.cpp.o: ../include/renderer/Shader.hpp
 CMakeFiles/app.dir/src/main.cpp.o: ../src/main.cpp
@@ -30,6 +32,8 @@ CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../include/data/MockFrameGenerat
 CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../include/renderer/BeltBatch.hpp
 CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../include/renderer/BoxLayer.hpp
 CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../include/renderer/Camera.hpp
+CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../include/renderer/EdgeBoxLayer.hpp
+CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../include/renderer/ObstacleLayer.hpp
 CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../include/renderer/PointCloudLayer.hpp
 CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../include/renderer/Renderer.hpp
 CMakeFiles/app.dir/src/renderer/Renderer.cpp.o: ../include/renderer/Shader.hpp

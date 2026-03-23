@@ -2,6 +2,7 @@
 #include "renderer/PointCloudLayer.hpp"
 #include "data/MockFrameGenerator.hpp"
 #include "renderer/BoxLayer.hpp"
+#include "renderer/ObstacleLayer.hpp"
 #include <iostream>
 #include <iomanip>
 
@@ -41,7 +42,9 @@ Renderer::Renderer(int w, int h) : width(w), height(h) {
 
     // pointCloud = std::make_unique<PointCloudLayer>(1000000);
     egoCarLayer = std::make_unique<BoxLayer>();
+    egoCarEdgeLayer = std::make_unique<EdgeBoxLayer>();
     beltBatch = std::make_unique<BeltBatch>(200000);
+    obstacles = std::make_unique<ObstacleLayer>(300);
 }
 
 Renderer::~Renderer() {
@@ -55,14 +58,14 @@ void Renderer::run() {
         float currentTime = (float)glfwGetTime();
 
         MockFrame frame = generator.createFrame();
-        if (frameCount % 60 == 0) {
-            std::cout << "\033[1;32m[Frame Info]\033[0m " 
-                      << "Seq: " << frame.seq 
-                      << " | EgoX: " << std::fixed << std::setprecision(2) << frame.ego_pos.x
-                      << " | Vehicles: " << frame.polygons.size()
-                      << " | Lines: " << frame.polylines.size() << std::endl;
-        }
-        frameCount++;
+        // if (frameCount % 60 == 0) {
+        //     std::cout << "\033[1;32m[Frame Info]\033[0m " 
+        //               << "Seq: " << frame.seq 
+        //               << " | EgoX: " << std::fixed << std::setprecision(2) << frame.ego_pos.x
+        //               << " | Vehicles: " << frame.polygons.size()
+        //               << " | Lines: " << frame.polylines.size() << std::endl;
+        // }
+        // frameCount++;
 
         // // 1. Update (数据处理)
         // pointCloud->update(currentTime);
@@ -78,7 +81,7 @@ void Renderer::run() {
 
         // pointCloud->render(view, proj);
         egoCarLayer->render(frame.ego_pos, 0.0f, glm::vec3(4.0f, 2.0f, 1.5f), view, proj);
-
+        egoCarEdgeLayer->render(frame.ego_pos, 0.0f, glm::vec3(4.0f, 2.0f, 1.5f), view, proj);
 
         beltBatch->begin();
         for (auto& line : frame.polylines) {
@@ -96,6 +99,8 @@ void Renderer::run() {
         // 渲染
         beltBatch->render(view, proj);
 
+        obstacles->updateData(frame.polygons); // 传入 Mock 数据
+        obstacles->render(view, proj);         // 绘制
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
