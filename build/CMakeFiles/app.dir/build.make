@@ -140,6 +140,7 @@ app: CMakeFiles/app.dir/src/data/MockFrameGenerator.cpp.o
 app: CMakeFiles/app.dir/external/glad/src/glad.c.o
 app: CMakeFiles/app.dir/build.make
 app: /usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+app: /usr/lib/x86_64-linux-gnu/libtbb.so.2
 app: /usr/lib/x86_64-linux-gnu/libGLX.so
 app: /usr/lib/x86_64-linux-gnu/libOpenGL.so
 app: CMakeFiles/app.dir/link.txt

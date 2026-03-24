@@ -47,6 +47,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # 2. 查找库
+# 1. 查找 TBB 库
+find_package(TBB REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
@@ -76,6 +78,7 @@ add_executable(app ${SRC_LIST})
 target_link_libraries(app
     glfw
     OpenGL::GL
+    TBB::tbb
     ${CMAKE_DL_LIBS}
     Threads::Threads
 )

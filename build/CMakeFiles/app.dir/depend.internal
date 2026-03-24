@@ -16,14 +16,18 @@ CMakeFiles/app.dir/src/main.cpp.o
  ../include/renderer/BoxLayer.hpp
  ../include/renderer/Camera.hpp
  ../include/renderer/EdgeBoxLayer.hpp
+ ../include/renderer/MockSensorBackend.hpp
  ../include/renderer/ObstacleEdgeLayer.hpp
  ../include/renderer/ObstacleLayer.hpp
+ ../include/renderer/Point.hpp
+ ../include/renderer/PointCloudLayer.hpp
  ../include/renderer/Renderer.hpp
  ../include/renderer/Shader.hpp
  /home/huojianyu/桌面/data/test/src/main.cpp
 CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.o
  ../external/glad/include/KHR/khrplatform.h
  ../external/glad/include/glad/glad.h
+ ../include/renderer/Point.hpp
  ../include/renderer/PointCloudLayer.hpp
  ../include/renderer/Shader.hpp
  /home/huojianyu/桌面/data/test/src/renderer/PointCloudLayer.cpp
@@ -35,8 +39,10 @@ CMakeFiles/app.dir/src/renderer/Renderer.cpp.o
  ../include/renderer/BoxLayer.hpp
  ../include/renderer/Camera.hpp
  ../include/renderer/EdgeBoxLayer.hpp
+ ../include/renderer/MockSensorBackend.hpp
  ../include/renderer/ObstacleEdgeLayer.hpp
  ../include/renderer/ObstacleLayer.hpp
+ ../include/renderer/Point.hpp
  ../include/renderer/PointCloudLayer.hpp
  ../include/renderer/Renderer.hpp
  ../include/renderer/Shader.hpp

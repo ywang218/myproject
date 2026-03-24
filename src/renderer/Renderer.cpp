@@ -1,5 +1,5 @@
 #include "renderer/Renderer.hpp"
-#include "renderer/PointCloudLayer.hpp"
+// #include "renderer/PointCloudLayer.hpp"
 #include "data/MockFrameGenerator.hpp"
 #include "renderer/BoxLayer.hpp"
 #include "renderer/ObstacleLayer.hpp"
@@ -46,12 +46,22 @@ Renderer::Renderer(int w, int h) : width(w), height(h) {
     camera = std::make_unique<Camera>(glm::vec3(0, 30, 60));
     g_camera = camera.get(); // 供回调使用
 
-    // pointCloud = std::make_unique<PointCloudLayer>(1000000);
+    pointCloud = std::make_unique<PointCloudLayer>(10000000);
     egoCarLayer = std::make_unique<BoxLayer>();
     egoCarEdgeLayer = std::make_unique<EdgeBoxLayer>();
     beltBatch = std::make_unique<BeltBatch>(200000);
     obstacles = std::make_unique<ObstacleLayer>(300);
     edges = std::make_unique<ObstacleEdgeLayer>(300);
+    sensorBackend = std::make_unique<MockSensorBackend>(1000000);
+
+    // 3. 【关键：串联逻辑】
+    // 获取点云图层映射好的 GPU 内存指针
+    Point* gpuMemoryPtr = pointCloud->getMappedPointer();
+
+    // 把指针交给后端，并启动后台生成线程
+    if (gpuMemoryPtr) {
+        sensorBackend->start(gpuMemoryPtr);
+    }
 }
 
 Renderer::~Renderer() {
@@ -108,9 +118,11 @@ void Renderer::run() {
         glm::mat4 view = camera->GetViewMatrix();
         glm::mat4 proj = camera->GetProjectionMatrix((float)width, (float)height);
 
+        sensorBackend->setEgoPosition(frame.ego_pos);  
         // pointCloud->render(view, proj);
         egoCarLayer->render(frame.ego_pos, 0.0f, glm::vec3(4.0f, 2.0f, 1.5f), view, proj);
         egoCarEdgeLayer->render(frame.ego_pos, 0.0f, glm::vec3(4.0f, 2.0f, 1.5f), view, proj);
+        pointCloud->render(view, proj); 
 
         beltBatch->begin();
         for (auto& line : frame.polylines) {
@@ -126,6 +138,7 @@ void Renderer::run() {
             }
         }
         // 渲染
+        
         beltBatch->render(view, proj);
 
         obstacles->updateData(frame.polygons); // 传入 Mock 数据

@@ -238,6 +238,9 @@ PointCloud_BINARY_DIR:STATIC=/home/huojianyu/桌面/data/test/build
 //Value Computed by CMake
 PointCloud_SOURCE_DIR:STATIC=/home/huojianyu/桌面/data/test
 
+//The directory containing a CMake configuration file for TBB.
+TBB_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/TBB
+
 //The directory containing a CMake configuration file for glfw3.
 glfw3_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/glfw3
 

@@ -8,7 +8,9 @@
 #include "ObstacleLayer.hpp"
 #include "ObstacleEdgeLayer.hpp"
 #include "BeltBatch.hpp"
+#include "PointCloudLayer.hpp"
 #include "data/MockFrameGenerator.hpp"
+#include "MockSensorBackend.hpp"
 #include <memory>
 
 // 前向声明，提高编译速度
@@ -34,6 +36,7 @@ private:
     std::unique_ptr<BeltBatch> beltBatch;
     std::unique_ptr<ObstacleLayer> obstacles;
     std::unique_ptr<ObstacleEdgeLayer> edges;
+    std::unique_ptr<MockSensorBackend> sensorBackend; // 新成员
     // 所有的 Render Items (后期逐个复刻)
     // std::unique_ptr<BeltBatch> beltBatch; 
 
