@@ -37,6 +37,14 @@ PointCloudLayer::PointCloudLayer(int count) : pointCount(count) {
 
     uEgoPosLoc = glGetUniformLocation(filterShader->ID, "uEgoPos");
     uTotalPointsLoc = glGetUniformLocation(filterShader->ID, "uTotalPoints");
+
+
+    // 4. 修改原子计数器和间接指令 Buffer
+    // 我们将它们合二为一，或者确保 atomicBuffer 的布局符合 IndirectCommand 结构
+    glGenBuffers(1, &indirectBuffer);
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, indirectBuffer);
+    DrawArraysIndirectCommand cmd = { 0, 1, 0, 0 };
+    glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(DrawArraysIndirectCommand), &cmd, GL_DYNAMIC_DRAW);
 }
 
 PointCloudLayer::~PointCloudLayer() {
@@ -122,82 +130,51 @@ PointCloudLayer::~PointCloudLayer() {
 
 
 void PointCloudLayer::render(const glm::mat4& view, const glm::mat4& projection, const glm::vec3& egoPos) {
-    if (!sharedMappedPtr || !filterShader || !renderShader) return;
+    if (!sharedMappedPtr) return;
 
-    // --- 第一阶段：同步 ---
-    // 确保后台线程通过 Persistent Mapping 写入的数据对 GPU 可见
-    glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
-     
+    // --- 步骤 1：重置间接绘制指令 ---
+    // 每一帧开始前，必须把 vertexCount 清零，且确保 instanceCount 为 1
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, indirectBuffer);
+    uint32_t resetData[4] = { 0, 1, 0, 0 }; 
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(resetData), resetData);
 
-    // 1. 重置计数器
-    uint32_t zero = 0;
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, atomicBuffer);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(uint32_t), &zero);
-    glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT); // 确保重置完成
-
-
-    // std::cout << "DEBUG: Shader Use" << std::endl;
-    // 2. 运行 Compute Shader
+    // --- 步骤 2：执行 Compute Shader 过滤 ---
     filterShader->use();
-    
-    // 安全地获取 Location
-    // GLint locEgo = glGetUniformLocation(filterShader->ID, "uEgoPos");
-    // GLint locTotal = glGetUniformLocation(filterShader->ID, "uTotalPoints");
-
-    // if (locEgo != -1) 
     glUniform3fv(uEgoPosLoc, 1, &egoPos[0]);
-    // if (locTotal != -1)
-     glUniform1ui(
-        //locTotal
-        uTotalPointsLoc
-        , (GLuint)pointCount);
+    glUniform1ui(uTotalPointsLoc, (GLuint)pointCount);
 
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, inputSSBO);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, outputSSBO);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, atomicBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, inputSSBO);    // 输入
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, outputSSBO);   // 输出
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, indirectBuffer); // 指令+计数
 
-    // 每一组 256 线程
-    GLuint numGroups = (pointCount + 255) / 256;
+    glDispatchCompute((pointCount + 255) / 256, 1, 1);
 
-    // std::cout << "DEBUG: Dispatch" << std::endl;
-    glDispatchCompute(numGroups, 1, 1);
+    // --- 步骤 3：内存屏障 (关键优化) ---
+    // 确保 Compute Shader 写完后，Draw 指令能看到 count，顶点属性层能看到数据
+    glMemoryBarrier(GL_COMMAND_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 
-    // 3. 强力同步
-    glMemoryBarrier(GL_ALL_BARRIER_BITS | GL_ATOMIC_COUNTER_BARRIER_BIT);
-    // glFinish(); 
+    // --- 步骤 4：间接绘制 ---
+    renderShader->use();
+    renderShader->setMat4("uView", view);
+    renderShader->setMat4("uProjection", projection);
 
-    glFlush();
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, outputSSBO); // 绑定过滤后的数据源
 
-    // std::cout << "DEBUG: Readback" << std::endl;
-    // 4. 读取计数器
-    uint32_t activePoints = 0;
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, atomicBuffer);
-    glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(uint32_t), &activePoints);
+    // 重新指定顶点属性指针（确保指向当前的 outputSSBO）
+    glEnableVertexAttribArray(0); 
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Point), (void*)offsetof(Point, pos));
+    glEnableVertexAttribArray(1); 
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Point), (void*)offsetof(Point, color));
 
-    // 强制限制，防止 glDrawArrays 崩溃
-    activePoints = std::min(activePoints, (uint32_t)pointCount);
-    
-    if (activePoints > 0) {
-        // std::cout << "DEBUG: Draw: " << activePoints << std::endl;
-        renderShader->use();
-        renderShader->setMat4("uView", view);
-        renderShader->setMat4("uProjection", projection);
+    // 绑定间接指令 Buffer 并绘制
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, indirectBuffer);
+    glDrawArraysIndirect(GL_POINTS, (void*)0); 
 
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, outputSSBO);
-        
-        glEnableVertexAttribArray(0); 
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Point), (void*)offsetof(Point, pos));
-        glEnableVertexAttribArray(1); 
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Point), (void*)offsetof(Point, color));
-
-        glDrawArrays(GL_POINTS, 0, (GLsizei)activePoints);
-        
-        glBindVertexArray(0);
-    }
+    // 清理
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+    glBindVertexArray(0);
 }
-
-
 
 
 // #include "renderer/PointCloudLayer.hpp"

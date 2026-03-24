@@ -79,4 +79,12 @@ private:
 
     // 指向 Persistent Mapping 显存地址的指针
     Point* sharedMappedPtr = nullptr;
+
+    GLuint indirectBuffer; // 用于存储绘制指令
+    struct DrawArraysIndirectCommand {
+        GLuint count;         // 对应 glDrawArrays 的 count (activePoints)
+        GLuint instanceCount; // 1
+        GLuint first;        // 0
+        GLuint baseInstance; // 0
+    };
 };
