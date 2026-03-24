@@ -84,6 +84,33 @@
 #include <ctime>
 #include <algorithm>
 #include <map>
+#include <iostream>
+#include <cstdint>
+#include <vector>
+
+// 1. 极速生成器：Xorshift32
+uint32_t xorshift32(uint32_t& state) {
+    state ^= state << 13;
+    state ^= state >> 17;
+    state ^= state << 5;
+    return state;
+}
+
+// 2. 映射到指定范围 [min, max]
+int getFastRandom(uint32_t& state, uint32_t min, uint32_t max) {
+    // 计算区间长度（包含端点）
+    uint32_t range = max - min + 1; // 10,000,000 - 200,000 + 1 = 9,800,001
+    
+    // 获取 32 位原始随机数
+    uint32_t x = xorshift32(state);
+    
+    // 核心算法：(x * range) >> 32
+    // 使用 uint64_t 防止乘法溢出
+    // 这相当于把 x / 2^32 的比例应用到 range 上
+    uint32_t scaled = (uint32_t)(((uint64_t)x * range) >> 32);
+    
+    return (int)(scaled + min);
+}
 
 // 辅助工具：将十六进制颜色字符串转换为 glm::vec4 (类似前端的 ColorMap)
 glm::vec4 HexToVec4(std::string hex) {
@@ -211,7 +238,7 @@ void MockFrameGenerator::initVehicles() {
 //         pointCloudBuffer[idx + 3] = 1.0f; // 强度/颜色占位
 //     }
 // }
-
+uint32_t start = 600000;
 MockFrame MockFrameGenerator::createFrame() {
     MockFrame frame;
     frame.timestamp = (double)time(nullptr);
@@ -235,7 +262,7 @@ MockFrame MockFrameGenerator::createFrame() {
     // 4. point cloud
     // updatePointCloud(frame.ego_pos);
     frame.point_data = pointCloudBuffer.data();
-    frame.point_count = 1000000;
+    frame.point_count = getFastRandom(start, 200000, 10000000);  // 200000 + random() * 9800000; //1000000;
     return frame;
 }
 

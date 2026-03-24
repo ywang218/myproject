@@ -114,5 +114,7 @@ void PointCloudLayer::render(const glm::mat4& view, const glm::mat4& projection)
     // 点云绘制只需要绑定 VAO
     // 数据已经在渲染之前由 Backend 线程静默写入 SSBO 了
     glBindVertexArray(vao);
-    glDrawArrays(GL_POINTS, 0, pointCount);
+    int drawCount = pointCount / currentStride;
+    // std::cout << "drawcount: " << drawCount << "current stride: " << currentStride << std::endl;
+    glDrawArrays(GL_POINTS, 0, drawCount);
 }

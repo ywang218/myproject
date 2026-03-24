@@ -97,6 +97,8 @@ void Renderer::run() {
         } 
 
         MockFrame frame = generator.createFrame();
+        // std::cout << "point cont" << frame.point_count << std::endl;
+
         if (frameCount % 60 == 0) {
             std::cout << "\033[1;32m[Frame Info]\033[0m " 
                       << "Seq: " << frame.seq 
@@ -122,6 +124,15 @@ void Renderer::run() {
         // pointCloud->render(view, proj);
         egoCarLayer->render(frame.ego_pos, 0.0f, glm::vec3(4.0f, 2.0f, 1.5f), view, proj);
         egoCarEdgeLayer->render(frame.ego_pos, 0.0f, glm::vec3(4.0f, 2.0f, 1.5f), view, proj);
+        
+        if(frame.point_count > 5000000) {
+            pointCloud->setLOD(10);
+        } else if(frame.point_count > 2000000 && frame.point_count <= 5000000) {
+            pointCloud->setLOD(5); 
+        } else {
+            pointCloud->setLOD(1);
+        }
+        
         pointCloud->render(view, proj); 
 
         beltBatch->begin();

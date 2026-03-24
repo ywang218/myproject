@@ -65,11 +65,17 @@ public:
     // 关键：暴露这个指针给 Backend，让 Backend 能直接写显存
     Point* getMappedPointer() { return sharedMappedPtr; }
 
+    // 设置抽稀倍率：1 表示全画，10 表示每 10 个点画 1 个
+    void setLOD(int stride) { 
+        currentStride = (stride > 0) ? stride : 1; 
+    } 
+
     // 渲染逻辑
     void render(const glm::mat4& view, const glm::mat4& projection);
 
 private:
     int pointCount;
+    int currentStride = 1;
     GLuint ssbo, vao;
     std::unique_ptr<Shader> renderShader;
 
