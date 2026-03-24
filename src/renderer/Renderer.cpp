@@ -1,5 +1,5 @@
 #include "renderer/Renderer.hpp"
-// #include "renderer/PointCloudLayer.hpp"
+#include "renderer/PointCloudLayer.hpp"
 #include "data/MockFrameGenerator.hpp"
 #include "renderer/BoxLayer.hpp"
 #include "renderer/ObstacleLayer.hpp"
@@ -45,14 +45,14 @@ Renderer::Renderer(int w, int h) : width(w), height(h) {
     // 初始化相机和图层
     camera = std::make_unique<Camera>(glm::vec3(0, 30, 60));
     g_camera = camera.get(); // 供回调使用
-
-    pointCloud = std::make_unique<PointCloudLayer>(10000000);
+    const int MAX_POINTS = 5000000;
+    pointCloud = std::make_unique<PointCloudLayer>(MAX_POINTS);
     egoCarLayer = std::make_unique<BoxLayer>();
     egoCarEdgeLayer = std::make_unique<EdgeBoxLayer>();
     beltBatch = std::make_unique<BeltBatch>(200000);
     obstacles = std::make_unique<ObstacleLayer>(300);
     edges = std::make_unique<ObstacleEdgeLayer>(300);
-    sensorBackend = std::make_unique<MockSensorBackend>(1000000);
+    sensorBackend = std::make_unique<MockSensorBackend>(MAX_POINTS);
 
     // 3. 【关键：串联逻辑】
     // 获取点云图层映射好的 GPU 内存指针
@@ -76,6 +76,7 @@ void Renderer::run() {
 
     // 确保这里关闭了垂直同步
     glfwSwapInterval(0);
+    std::cout << "Step 1: Loop start" << std::endl;
     while (!glfwWindowShouldClose(window)) {
         float currentTime = (float)glfwGetTime();
         nbFrames++;
@@ -97,6 +98,7 @@ void Renderer::run() {
         } 
 
         MockFrame frame = generator.createFrame();
+        // std::cout << "Step 2: Matrix update" << std::endl;
         // std::cout << "point cont" << frame.point_count << std::endl;
 
         if (frameCount % 60 == 0) {
@@ -122,18 +124,17 @@ void Renderer::run() {
 
         sensorBackend->setEgoPosition(frame.ego_pos);  
         // pointCloud->render(view, proj);
+
+        // ---------------------------------------------------------
+        // 3. 【核心变更】渲染点云
+        // ---------------------------------------------------------
+        // 注意：不再调用 pointCloud->setLOD(...)，
+        // 我们直接把 frame.ego_pos 传进去，让 Compute Shader 执行 GPU 过滤。
+        pointCloud->render(view, proj, frame.ego_pos); 
+        // ---------------------------------------------------------
+
         egoCarLayer->render(frame.ego_pos, 0.0f, glm::vec3(4.0f, 2.0f, 1.5f), view, proj);
         egoCarEdgeLayer->render(frame.ego_pos, 0.0f, glm::vec3(4.0f, 2.0f, 1.5f), view, proj);
-        
-        if(frame.point_count > 5000000) {
-            pointCloud->setLOD(10);
-        } else if(frame.point_count > 2000000 && frame.point_count <= 5000000) {
-            pointCloud->setLOD(5); 
-        } else {
-            pointCloud->setLOD(1);
-        }
-        
-        pointCloud->render(view, proj); 
 
         beltBatch->begin();
         for (auto& line : frame.polylines) {

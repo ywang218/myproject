@@ -1,0 +1,60 @@
+#version 430 core
+layout (local_size_x = 256) in;
+
+struct Point { vec4 pos; vec4 color; };
+layout(std430, binding = 0) readonly buffer InBuf  { Point inPoints[]; };
+layout(std430, binding = 1) writeonly buffer OutBuf { Point outPoints[]; };
+layout(std430, binding = 2) buffer Atom { uint count; };
+
+uniform vec3 uEgoPos;
+uniform uint uTotalPoints;
+
+// 声明组内共享内存
+shared uint groupCount;
+shared uint groupOffset;
+shared uint localIndices[256]; // 记录组内哪些点要保留
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    uint localIdx = gl_LocalInvocationID.x;
+
+    // 1. 初始化共享变量
+    if (localIdx == 0) groupCount = 0;
+    barrier();
+
+    // 2. 局部判断
+    bool keep = false;
+    if (idx < uTotalPoints) {
+        float d = distance(inPoints[idx].pos.xyz, uEgoPos);
+        // 这里可以实现简单的 LOD：距离越远，保留概率越低
+        // 例如：d < 30m 全保, 30-100m 抽样 1/4
+        if (d < 3.5) {
+            keep = true;
+        }else if (d < 150.0 && (idx % 100 == 0)) {
+            keep = true;
+        } 
+        // keep = true;
+    }
+
+    // 3. 组内原子加法（开销极低，在芯片内部完成）
+    uint myLocalOffset;
+    if (keep) {
+        myLocalOffset = atomicAdd(groupCount, 1);
+        localIndices[myLocalOffset] = idx;
+    }
+    barrier();
+
+    // 4. 由一个线程代表全组去申请全局空间
+    if (localIdx == 0 && groupCount > 0) {
+        groupOffset = atomicAdd(count, groupCount);
+    }
+    barrier();
+
+    // 5. 批量写入全局内存（合并写入，性能极高）
+    if (keep) {
+        uint writeIdx = groupOffset + myLocalOffset;
+        if (writeIdx < uTotalPoints) {
+            outPoints[writeIdx] = inPoints[localIndices[myLocalOffset]];
+        }
+    }
+}
