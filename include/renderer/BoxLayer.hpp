@@ -117,7 +117,7 @@ public:
         shader->setMat4("view", view);
         shader->setMat4("projection", proj);
         // 设置一个略带透明感的青绿色（主车色）
-        shader->setVec4("color", glm::vec4(0.0f, 1.0f, 0.5f, 0.8f)); 
+        shader->setVec4("color", glm::vec4(1.0f, 0.0f, 0.0f, 0.3f)); 
 
         glBindVertexArray(vao);
         // 【关键变化】：使用 glDrawElements 而不是 glDrawArrays

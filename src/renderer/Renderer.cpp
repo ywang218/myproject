@@ -45,7 +45,7 @@ Renderer::Renderer(int w, int h) : width(w), height(h) {
     // 初始化相机和图层
     camera = std::make_unique<Camera>(glm::vec3(0, 30, 60));
     g_camera = camera.get(); // 供回调使用
-    const int MAX_POINTS = 10000000;
+    const int MAX_POINTS = 3300000;
     pointCloud = std::make_unique<PointCloudLayer>(MAX_POINTS);
     egoCarLayer = std::make_unique<BoxLayer>();
     egoCarEdgeLayer = std::make_unique<EdgeBoxLayer>();

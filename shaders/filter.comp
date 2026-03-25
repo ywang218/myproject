@@ -37,7 +37,7 @@ void main() {
     bool keep = false;
     if (idx < uTotalPoints) {
         float d = distance(inPoints[idx].pos.xyz, uEgoPos);
-        if (d < 5.5  || (d < 36.5 && idx % 50 == 0) || (d < 66 && idx % 170 == 0) || (d < 96 && idx % 300 == 0)  || (d < 123 && idx % 700 == 0) || (d < 150.0 && (idx % 1000 == 0))) {
+        if (d < 3.5  || (d < 20 && idx % 3 == 0) || (d < 38.5 && idx % 15 == 0) || (d < 36.5 && idx % 45 == 0) || (d < 66 && idx % 170 == 0) || (d < 96 && idx % 300 == 0)  || (d < 123 && idx % 700 == 0) || (d < 150.0 && (idx % 1000 == 0))) {
             keep = true;
         }
     }

@@ -272,7 +272,7 @@ Polygon MockFrameGenerator::vehicleToPolygon(const Vehicle& v) {
     p.center = glm::vec3(v.x, v.y, v.h / 2.0f);
     p.heading = v.heading;
     p.size = glm::vec3(v.l, v.w, v.h);
-    p.style.color = HexToVec4("#3399FFCC");
+    p.style.color = HexToVec4("#32CD32");
 
     float hl = v.l / 2.0f;
     float hw = v.w / 2.0f;
