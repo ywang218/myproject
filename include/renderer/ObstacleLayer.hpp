@@ -7,6 +7,8 @@
 #include "renderer/Shader.hpp"
 #include "data/MockFrameGenerator.hpp" 
 
+// https://chatgpt.com/c/69cdca63-d2dc-83a5-9366-481e03fa16e2
+
 class ObstacleLayer {
 public:
     // 构造函数：初始化 OpenGL 资源

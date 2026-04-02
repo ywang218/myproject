@@ -144,7 +144,7 @@ private:
                     1.0f
                 );
                 
-                // 模拟强度变化数据
+                // 模拟强度变化数据   !IMPORTANT: targetPtr is sharedMappedPtr who be passed in and targetPtr 就是指向 inputSSBO 的 CPU 端映射
                 targetPtr[i].color = glm::vec4(0.2f, 0.4f + rz * 0.2f, 1.0f, 0.8f);
             });
 
