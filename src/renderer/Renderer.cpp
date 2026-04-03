@@ -242,7 +242,6 @@ Renderer::Renderer(int w, int h) : width(w), height(h) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     window = glfwCreateWindow(width, height, "AutoDrive Engine C++", NULL, NULL);
     if (!window) { glfwTerminate(); }
-    
     glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
