@@ -15,8 +15,17 @@ set(CMAKE_C_TARGET_INCLUDE_PATH
   "../include/renderer"
   "../include/data"
   "../external/glad/include"
+  "../external/imgui"
+  "../external/imgui/backends"
   )
 set(CMAKE_DEPENDS_CHECK_CXX
+  "/home/huojianyu/桌面/data/test/external/imgui/backends/imgui_impl_glfw.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/external/imgui/backends/imgui_impl_glfw.cpp.o"
+  "/home/huojianyu/桌面/data/test/external/imgui/backends/imgui_impl_opengl3.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/external/imgui/backends/imgui_impl_opengl3.cpp.o"
+  "/home/huojianyu/桌面/data/test/external/imgui/imgui.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/external/imgui/imgui.cpp.o"
+  "/home/huojianyu/桌面/data/test/external/imgui/imgui_demo.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/external/imgui/imgui_demo.cpp.o"
+  "/home/huojianyu/桌面/data/test/external/imgui/imgui_draw.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/external/imgui/imgui_draw.cpp.o"
+  "/home/huojianyu/桌面/data/test/external/imgui/imgui_tables.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/external/imgui/imgui_tables.cpp.o"
+  "/home/huojianyu/桌面/data/test/external/imgui/imgui_widgets.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/external/imgui/imgui_widgets.cpp.o"
   "/home/huojianyu/桌面/data/test/src/data/MockFrameGenerator.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/src/data/MockFrameGenerator.cpp.o"
   "/home/huojianyu/桌面/data/test/src/main.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/src/main.cpp.o"
   "/home/huojianyu/桌面/data/test/src/renderer/PointCloudLayer.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.o"
@@ -30,6 +39,8 @@ set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "../include/renderer"
   "../include/data"
   "../external/glad/include"
+  "../external/imgui"
+  "../external/imgui/backends"
   )
 
 # Targets to which this target links.

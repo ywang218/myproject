@@ -53,22 +53,42 @@ find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
 
+set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/external/imgui)
+
 # 3. 设置 Include 路径
 include_directories(
     include
     include/renderer
     include/data
     external/glad/include
+    ${IMGUI_DIR}               # <--- ImGui 核心头文件
+    ${IMGUI_DIR}/backends      # <--- ImGui 后端头文件
 )
 
 # 4. 精确指定源码（避免 GLOB 抓取到多余的 main 函数）
 # 建议手动列出文件，或者确保 src 目录下只有一个 main.cpp
+
+# 4. 精确指定源码
+# ---------------------------------------------------------
+# 【新增】：收集 ImGui 的源文件
+# ---------------------------------------------------------
+set(IMGUI_SRC
+    ${IMGUI_DIR}/imgui.cpp
+    ${IMGUI_DIR}/imgui_draw.cpp
+    ${IMGUI_DIR}/imgui_widgets.cpp
+    ${IMGUI_DIR}/imgui_tables.cpp
+    ${IMGUI_DIR}/imgui_demo.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+)
+
 set(SRC_LIST
     src/main.cpp
     src/renderer/Renderer.cpp
     src/renderer/PointCloudLayer.cpp
     src/data/MockFrameGenerator.cpp
     external/glad/src/glad.c  # <--- 关键实现
+    ${IMGUI_SRC}               # <--- 将 ImGui 源码加入项目
 )
 
 # 5. 生成可执行文件

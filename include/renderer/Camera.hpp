@@ -34,7 +34,7 @@ public:
         Position = glm::mix(Position, targetPos, lerpFactor);
         
         // 3. 始终看向主车前方 10 米
-        glm::vec3 lookAtTarget = egoPos + forward * 10.0f;
+        glm::vec3 lookAtTarget = egoPos + forward * 6.0f;
         Front = glm::normalize(lookAtTarget - Position);
     }
 };
