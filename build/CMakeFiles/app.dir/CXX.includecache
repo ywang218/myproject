@@ -212,10 +212,6 @@ sstream
 iostream
 -
 
-/home/huojianyu/桌面/data/test/src/main.cpp
-renderer/Renderer.hpp
-/home/huojianyu/桌面/data/test/src/renderer/Renderer.hpp
-
 /home/huojianyu/桌面/data/test/src/renderer/Renderer.cpp
 renderer/Renderer.hpp
 /home/huojianyu/桌面/data/test/src/renderer/renderer/Renderer.hpp
