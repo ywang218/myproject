@@ -1,46 +1,25 @@
+
+# Consider dependencies only in project.
+set(CMAKE_DEPENDS_IN_PROJECT_ONLY OFF)
+
 # The set of languages for which implicit dependencies are needed:
 set(CMAKE_DEPENDS_LANGUAGES
-  "C"
-  "CXX"
   )
-# The set of files for implicit dependencies of each language:
-set(CMAKE_DEPENDS_CHECK_C
-  "/home/huojianyu/桌面/data/test/external/glad/src/glad.c" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/external/glad/src/glad.c.o"
-  )
-set(CMAKE_C_COMPILER_ID "GNU")
 
-# The include file search paths:
-set(CMAKE_C_TARGET_INCLUDE_PATH
-  "../include"
-  "../include/renderer"
-  "../include/data"
-  "../external/glad/include"
-  "../external/imgui"
-  "../external/imgui/backends"
-  )
-set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/huojianyu/桌面/data/test/external/imgui/backends/imgui_impl_glfw.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/external/imgui/backends/imgui_impl_glfw.cpp.o"
-  "/home/huojianyu/桌面/data/test/external/imgui/backends/imgui_impl_opengl3.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/external/imgui/backends/imgui_impl_opengl3.cpp.o"
-  "/home/huojianyu/桌面/data/test/external/imgui/imgui.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/external/imgui/imgui.cpp.o"
-  "/home/huojianyu/桌面/data/test/external/imgui/imgui_demo.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/external/imgui/imgui_demo.cpp.o"
-  "/home/huojianyu/桌面/data/test/external/imgui/imgui_draw.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/external/imgui/imgui_draw.cpp.o"
-  "/home/huojianyu/桌面/data/test/external/imgui/imgui_tables.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/external/imgui/imgui_tables.cpp.o"
-  "/home/huojianyu/桌面/data/test/external/imgui/imgui_widgets.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/external/imgui/imgui_widgets.cpp.o"
-  "/home/huojianyu/桌面/data/test/src/data/MockFrameGenerator.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/src/data/MockFrameGenerator.cpp.o"
-  "/home/huojianyu/桌面/data/test/src/main.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/src/main.cpp.o"
-  "/home/huojianyu/桌面/data/test/src/renderer/PointCloudLayer.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.o"
-  "/home/huojianyu/桌面/data/test/src/renderer/Renderer.cpp" "/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir/src/renderer/Renderer.cpp.o"
-  )
-set(CMAKE_CXX_COMPILER_ID "GNU")
-
-# The include file search paths:
-set(CMAKE_CXX_TARGET_INCLUDE_PATH
-  "../include"
-  "../include/renderer"
-  "../include/data"
-  "../external/glad/include"
-  "../external/imgui"
-  "../external/imgui/backends"
+# The set of dependency files which are needed:
+set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/mnt/c/Users/Administrator/Desktop/project/myproject/external/glad/src/glad.c" "CMakeFiles/app.dir/external/glad/src/glad.c.o" "gcc" "CMakeFiles/app.dir/external/glad/src/glad.c.o.d"
+  "/mnt/c/Users/Administrator/Desktop/project/myproject/external/imgui/backends/imgui_impl_glfw.cpp" "CMakeFiles/app.dir/external/imgui/backends/imgui_impl_glfw.cpp.o" "gcc" "CMakeFiles/app.dir/external/imgui/backends/imgui_impl_glfw.cpp.o.d"
+  "/mnt/c/Users/Administrator/Desktop/project/myproject/external/imgui/backends/imgui_impl_opengl3.cpp" "CMakeFiles/app.dir/external/imgui/backends/imgui_impl_opengl3.cpp.o" "gcc" "CMakeFiles/app.dir/external/imgui/backends/imgui_impl_opengl3.cpp.o.d"
+  "/mnt/c/Users/Administrator/Desktop/project/myproject/external/imgui/imgui.cpp" "CMakeFiles/app.dir/external/imgui/imgui.cpp.o" "gcc" "CMakeFiles/app.dir/external/imgui/imgui.cpp.o.d"
+  "/mnt/c/Users/Administrator/Desktop/project/myproject/external/imgui/imgui_demo.cpp" "CMakeFiles/app.dir/external/imgui/imgui_demo.cpp.o" "gcc" "CMakeFiles/app.dir/external/imgui/imgui_demo.cpp.o.d"
+  "/mnt/c/Users/Administrator/Desktop/project/myproject/external/imgui/imgui_draw.cpp" "CMakeFiles/app.dir/external/imgui/imgui_draw.cpp.o" "gcc" "CMakeFiles/app.dir/external/imgui/imgui_draw.cpp.o.d"
+  "/mnt/c/Users/Administrator/Desktop/project/myproject/external/imgui/imgui_tables.cpp" "CMakeFiles/app.dir/external/imgui/imgui_tables.cpp.o" "gcc" "CMakeFiles/app.dir/external/imgui/imgui_tables.cpp.o.d"
+  "/mnt/c/Users/Administrator/Desktop/project/myproject/external/imgui/imgui_widgets.cpp" "CMakeFiles/app.dir/external/imgui/imgui_widgets.cpp.o" "gcc" "CMakeFiles/app.dir/external/imgui/imgui_widgets.cpp.o.d"
+  "/mnt/c/Users/Administrator/Desktop/project/myproject/src/data/MockFrameGenerator.cpp" "CMakeFiles/app.dir/src/data/MockFrameGenerator.cpp.o" "gcc" "CMakeFiles/app.dir/src/data/MockFrameGenerator.cpp.o.d"
+  "/mnt/c/Users/Administrator/Desktop/project/myproject/src/main.cpp" "CMakeFiles/app.dir/src/main.cpp.o" "gcc" "CMakeFiles/app.dir/src/main.cpp.o.d"
+  "/mnt/c/Users/Administrator/Desktop/project/myproject/src/renderer/PointCloudLayer.cpp" "CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.o" "gcc" "CMakeFiles/app.dir/src/renderer/PointCloudLayer.cpp.o.d"
+  "/mnt/c/Users/Administrator/Desktop/project/myproject/src/renderer/Renderer.cpp" "CMakeFiles/app.dir/src/renderer/Renderer.cpp.o" "gcc" "CMakeFiles/app.dir/src/renderer/Renderer.cpp.o.d"
   )
 
 # Targets to which this target links.

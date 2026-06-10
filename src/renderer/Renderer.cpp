@@ -205,10 +205,13 @@
 #include "renderer/ObstacleEdgeLayer.hpp"
 #include <iostream>
 #include <iomanip>
+#include <sstream>  // std::ostringstream (性能探针标题栏)
 #include <set>      // 核心修复
 #include <vector>   // 你的代码中用到了 vector
 #include <string>   // 用于 std::to_string
 #include <algorithm> // 用于 std::min, std::max 等
+#include <glm/gtc/matrix_transform.hpp> // translate/rotate/scale
+#include <glm/gtc/type_ptr.hpp>         // value_ptr
 // --- ImGui 头文件 ---
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -235,6 +238,27 @@ glm::vec3 getRayFromMouse(float x, float y, int w, int h, glm::mat4 proj, glm::m
     return glm::normalize(glm::vec3(glm::inverse(view) * rayEye));
 }
 
+// 辅助函数：把障碍物列表转成实例化绘制数据 (每实例 = mat4 model + vec4 color)。
+// 填充层和边框层的 model 矩阵完全相同，这里只算一次，两层共用，避免重复计算。
+// alpha 统一写 1.0，真正的透明度由各层 shader 的 uAlpha uniform 决定。
+static void buildObstacleInstances(const std::vector<Polygon>& obstacles, std::vector<float>& out) {
+    out.clear();
+    out.reserve(obstacles.size() * 20);
+    for (const auto& obs : obstacles) {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, obs.center);
+        model = glm::rotate(model, obs.heading, glm::vec3(0, 0, 1));
+        model = glm::scale(model, obs.size);
+
+        const float* mPtr = glm::value_ptr(model);
+        out.insert(out.end(), mPtr, mPtr + 16);
+        out.push_back(obs.style.color.r);
+        out.push_back(obs.style.color.g);
+        out.push_back(obs.style.color.b);
+        out.push_back(1.0f);
+    }
+}
+
 Renderer::Renderer(int w, int h) : width(w), height(h) {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -244,6 +268,11 @@ Renderer::Renderer(int w, int h) : width(w), height(h) {
     if (!window) { glfwTerminate(); }
     glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+
+    // 环境探针：确认 OpenGL 实际用的是硬件 GPU 还是软件渲染器
+    std::cout << "[GL] Vendor  : " << glGetString(GL_VENDOR)   << std::endl;
+    std::cout << "[GL] Renderer: " << glGetString(GL_RENDERER) << std::endl;
+    std::cout << "[GL] Version : " << glGetString(GL_VERSION)  << std::endl;
 
     // 初始化 ImGui
     IMGUI_CHECKVERSION();
@@ -260,16 +289,16 @@ Renderer::Renderer(int w, int h) : width(w), height(h) {
     glfwSwapInterval(0); 
 
     camera = std::make_unique<Camera>(glm::vec3(0, 30, 60));
-    pointCloud = std::make_unique<PointCloudLayer>(3300000);
+    pointCloud = std::make_unique<PointCloudLayer>(5000000);
     egoCarLayer = std::make_unique<BoxLayer>();
     egoCarEdgeLayer = std::make_unique<EdgeBoxLayer>();
     beltBatch = std::make_unique<BeltBatch>(200000);
     obstacles = std::make_unique<ObstacleLayer>(300);
     edges = std::make_unique<ObstacleEdgeLayer>(300);
-    sensorBackend = std::make_unique<MockSensorBackend>(3300000);
+    sensorBackend = std::make_unique<MockSensorBackend>(5000000);
 
-    Point* gpuMemoryPtr = pointCloud->getMappedPointer();
-    if (gpuMemoryPtr) sensorBackend->start(gpuMemoryPtr);
+    // 把点云图层的三缓冲池交给 worker：它从池里取缓冲写、写完发布
+    sensorBackend->start(pointCloud.get());
 }
 
 Renderer::~Renderer() {
@@ -498,9 +527,24 @@ void Renderer::run() {
         nbFrames++;
         if (currentTime - lastTime >= 1.0) {
             double fps = double(nbFrames) / (currentTime - lastTime);
-            glfwSetWindowTitle(window, ("AutoDrive Engine C++ | FPS: " + std::to_string((int)fps)).c_str());
+
+            // 性能探针：每秒采一次 GPU 耗时、剔除次数和实际绘制点数
+            uint32_t drawn = pointCloud->readDrawnCount();
+            unsigned fruns = pointCloud->getFilterRuns();
+            pointCloud->resetFilterRuns();
+            std::ostringstream title;
+            title << "AutoDrive Engine C++ | FPS: " << (int)fps
+                  << " | Filter: " << std::fixed << std::setprecision(2) << pointCloud->getComputeMs() << "ms"
+                  << " | FilterRuns/s: " << fruns
+                  << " | Draw: " << pointCloud->getDrawMs() << "ms"
+                  << " | In: " << pointCloud->getLastInputCount()        // 本帧输入点数 (300w~500w 随机)
+                  << " | Pts: " << drawn << "/" << 5000000;              // 剔除后绘制 / 容量上限
+            glfwSetWindowTitle(window, title.str().c_str());
+            // 同步打印到控制台，方便对照记录 baseline
+            std::cout << title.str() << std::endl;
+
             nbFrames = 0; lastTime = currentTime;
-        } 
+        }
 
         // 获取当前帧数据
         MockFrame frame = generator.createFrame();
@@ -548,8 +592,11 @@ void Renderer::run() {
         glm::mat4 view = camera->GetViewMatrix();
         glm::mat4 proj = camera->GetProjectionMatrix((float)this->width, (float)this->height);
 
-        sensorBackend->setEgoPosition(frame.ego_pos);  
-        pointCloud->render(view, proj, frame.ego_pos); 
+        sensorBackend->setEgoPosition(frame.ego_pos);
+
+        // a+b：回收 GPU 已读完的输入缓冲，并仅在有新就绪帧时才剔除；否则复用上次结果重画
+        pointCloud->consumeAndFilter();
+        pointCloud->draw(view, proj, frame.ego_pos); // 传实时 ego，点云平滑跟车
 
         egoCarLayer->render(frame.ego_pos, 0.0f, glm::vec3(4.0f, 2.0f, 1.5f), view, proj);
         egoCarEdgeLayer->render(frame.ego_pos, 0.0f, glm::vec3(4.0f, 2.0f, 1.5f), view, proj);
@@ -561,9 +608,13 @@ void Renderer::run() {
         }
         beltBatch->render(view, proj);
 
-        obstacles->updateData(frame.polygons); 
-        obstacles->render(view, proj);         
-        edges->updateData(frame.polygons);
+        // 障碍物：model 矩阵 + 颜色只计算一次，填充层与边框层共用同一份数据
+        buildObstacleInstances(frame.polygons, obstacleInstanceData);
+        int obsCount = (int)frame.polygons.size();
+
+        obstacles->uploadInstances(obstacleInstanceData, obsCount, frame.polygons); // 第三个参数供拾取
+        obstacles->render(view, proj);
+        edges->uploadInstances(obstacleInstanceData, obsCount);
         edges->render(view, proj);
 
         // 5. 【渲染多个 Label UI】

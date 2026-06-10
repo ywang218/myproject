@@ -86,20 +86,22 @@
 #include <execution> // 需要 C++17 支持并行算法
 #include <numeric>   // std::iota
 #include "Point.hpp"
+#include "renderer/PointCloudLayer.hpp" // 三缓冲池接口
 
 class MockSensorBackend {
 public:
-    MockSensorBackend(int count) : pointCount(count), running(false) {
+    MockSensorBackend(int count) : pointCount(count), running(false), countRng(12345u) {
         // 预分配索引数组，用于多线程并行任务分配
         indices.resize(pointCount);
         std::iota(indices.begin(), indices.end(), 0);
     }
-    
+
     ~MockSensorBackend() { stop(); }
 
-    void start(Point* sharedMemoryPtr) {
-        if (running || !sharedMemoryPtr) return;
-        targetPtr = sharedMemoryPtr;
+    // 接入点云图层的三缓冲池；worker 从池里取缓冲写、写完发布。
+    void start(PointCloudLayer* poolPtr) {
+        if (running || !poolPtr) return;
+        pool = poolPtr;
         running = true;
         workerThread = std::thread(&MockSensorBackend::updateLoop, this);
     }
@@ -125,10 +127,24 @@ private:
                 ego = currentEgoPos;
             }
 
-            // --- 核心优化：并行生成数据 (Parallel Data Generation) ---
-            // std::execution::par_unseq 允许编译器使用多线程 + SIMD 指令集加速
-            std::for_each(std::execution::par_unseq, indices.begin(), indices.end(), [&](int i) {
-                // 使用 thread_local 保证多线程下随机数生成的独立性和高性能，避免锁竞争
+            // 1. 从池里取一块空闲输入缓冲 (无 GL 调用，纯写映射内存)
+            int idx = -1;
+            Point* dst = pool->acquireWriteBuffer(idx);
+            if (!dst) {
+                // 无空闲缓冲 (渲染线程暂未回收完)，丢弃本帧稍后重试
+                std::this_thread::sleep_for(std::chrono::milliseconds(2));
+                continue;
+            }
+
+            // 2. 本帧实际点数：模拟真实激光雷达每帧点数可变 [300w, 500w]。
+            // 区间收窄 (1.67x 摆动) 是为了在 draw 受限的软件渲染器上减小绘制负载波动 → 减少顿挫；
+            // 真 GPU 上画十几万点是亚毫秒级，这种波动不影响。上限不得超过缓冲容量 pointCount。
+            const uint32_t kMin = 3000000u;
+            const uint32_t kMax = (pointCount < 5000000) ? (uint32_t)pointCount : 5000000u;
+            uint32_t count = kMin + (uint32_t)(countRng() % (uint32_t)(kMax - kMin + 1));
+
+            // 3. 并行生成 count 个点 (par_unseq：多线程 + SIMD)
+            std::for_each(std::execution::par_unseq, indices.begin(), indices.begin() + count, [&](int i) {
                 static thread_local std::mt19937 gen(std::random_device{}());
                 static thread_local std::uniform_real_distribution<float> dis(-1.0f, 1.0f);
 
@@ -136,17 +152,19 @@ private:
                 float ry = dis(gen);
                 float rz = dis(gen);
 
-                // 模拟真实的 backend 数据计算
-                targetPtr[i].pos = glm::vec4(
-                    ego.x + rx * 100.0f, 
-                    ego.y + ry * 50.0f, 
-                    rz * 2.0f, 
+                // 传感器/ego 相对坐标 (不烘 ego)。渲染时每帧用实时车辆位姿摆进世界，
+                // 这样点云平滑跟车，只有图案按 10Hz 刷新——与真实激光雷达可视化一致。
+                dst[i].pos = glm::vec4(
+                    rx * 100.0f,
+                    ry * 50.0f,
+                    rz * 2.0f,
                     1.0f
                 );
-                
-                // 模拟强度变化数据   !IMPORTANT: targetPtr is sharedMappedPtr who be passed in and targetPtr 就是指向 inputSSBO 的 CPU 端映射
-                targetPtr[i].color = glm::vec4(0.2f, 0.4f + rz * 0.2f, 1.0f, 0.8f);
+                dst[i].color = glm::vec4(0.2f, 0.4f + rz * 0.2f, 1.0f, 0.8f);
             });
+
+            // 4. 发布该帧 (索引 / egoPos / 实际点数)
+            pool->publishFrame(idx, ego, count);
 
             // 维持 10Hz 更新率
             auto endTime = std::chrono::high_resolution_clock::now();
@@ -160,13 +178,13 @@ private:
     }
 
     int pointCount;
-    Point* targetPtr = nullptr;
+    PointCloudLayer* pool = nullptr;
     std::thread workerThread;
     std::atomic<bool> running;
-    
+
     glm::vec3 currentEgoPos{0.0f};
     std::mutex mtx;
 
-    // 辅助索引数组，用于并行分发任务
-    std::vector<int> indices;
+    std::mt19937 countRng;        // 每帧点数随机 (仅 worker 线程使用)
+    std::vector<int> indices;     // 并行分发用的索引数组
 };

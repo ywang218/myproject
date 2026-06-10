@@ -12,6 +12,7 @@
 #include "data/MockFrameGenerator.hpp"
 #include "MockSensorBackend.hpp"
 #include <memory>
+#include <vector>
 
 // 前向声明，提高编译速度
 class PointCloudLayer;
@@ -37,6 +38,9 @@ private:
     std::unique_ptr<ObstacleLayer> obstacles;
     std::unique_ptr<ObstacleEdgeLayer> edges;
     std::unique_ptr<MockSensorBackend> sensorBackend; // 新成员
+
+    // 障碍物实例化数据的可复用缓冲，避免每帧重新分配 (填充层/边框层共用)
+    std::vector<float> obstacleInstanceData;
     // 所有的 Render Items (后期逐个复刻)
     // std::unique_ptr<BeltBatch> beltBatch; 
 

@@ -250,6 +250,7 @@ MockFrame MockFrameGenerator::createFrame() {
     frame.ego_pos = glm::vec3(egoX, -60.0f, 0.0f);
 
     // 2. 车辆更新与多边形转换
+    frame.polygons.reserve(vehicles.size()); // 预留空间，避免 push_back 反复扩容
     for (auto& v : vehicles) {
         v.x += std::cos(v.heading) * v.speed;
         if (v.x > 800.0f) v.x = -200.0f;
@@ -274,17 +275,8 @@ Polygon MockFrameGenerator::vehicleToPolygon(const Vehicle& v) {
     p.size = glm::vec3(v.l, v.w, v.h);
     p.style.color = HexToVec4("#32CD32");
 
-    float hl = v.l / 2.0f;
-    float hw = v.w / 2.0f;
-    float c = std::cos(v.heading);
-    float s = std::sin(v.heading);
-
-    float offsets[4][2] = {{hl, hw}, {hl, -hw}, {-hl, -hw}, {-hl, hw}};
-    for (int i = 0; i < 4; ++i) {
-        // 这里的坐标系逻辑：x 前向，y 侧向，z 向上
-        float nx = v.x + offsets[i][0] * c - offsets[i][1] * s;
-        float ny = v.y + offsets[i][0] * s + offsets[i][1] * c;
-        p.vertices.push_back(glm::vec3(nx, ny, v.h));
-    }
+    // 注意：障碍物渲染只用 center/size/heading 算 model 矩阵，
+    // 拾取只用 center/size —— 4 个角点 (p.vertices) 全程无人读取。
+    // 故不再计算，省去每帧 200 次 vector 堆分配。
     return p;
 }

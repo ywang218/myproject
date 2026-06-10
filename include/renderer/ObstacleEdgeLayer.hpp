@@ -84,61 +84,14 @@ public:
         glDeleteBuffers(1, &instanceVBO);
     }
 
-    // 更新函数
-    void updateData(const std::vector<Polygon>& obstacles) {
-    //    std::cout << "--- Current Obstacles (Count: " << obstacles.size() << ") ---" << std::endl;
-
-    //     for (const auto& obs : obstacles) {
-    //         std::cout << "ID: " << obs.id 
-    //                 << " | Pos: (" << obs.center.x << ", " << obs.center.y << ", " << obs.center.z << ")"
-    //                 << " | Heading: " << obs.heading 
-    //                 << std::endl;
-    //     }
-
-    //     std::cout << "------------------------------------------" << std::endl;
-        currentCount = std::min((int)obstacles.size(), maxSize);
-
+    // 上传由 Renderer 预计算好的实例数据 (与填充层共用同一份 mat4 + vec4)，本层不再重复算矩阵。
+    void uploadInstances(const std::vector<float>& payload, int count) {
+        currentCount = std::min(count, maxSize);
         if (currentCount == 0) return;
 
-        // std::vector<float> dataPayload;
-        // dataPayload.reserve(currentCount * 20);
-
-        dataPayload.clear();
-
-        for (int i = 0; i < currentCount; i++) {
-            const auto& obs = obstacles[i];
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, obs.center);
-            model = glm::rotate(model, obs.heading, glm::vec3(0, 0, 1));
-            model = glm::scale(model, obs.size);
-
-            const float* mPtr = glm::value_ptr(model);
-            dataPayload.insert(dataPayload.end(), mPtr, mPtr + 16);
-
-            // 写入颜色 (4 floats)
-            dataPayload.push_back(obs.style.color.r);
-            dataPayload.push_back(obs.style.color.g);
-            dataPayload.push_back(obs.style.color.b);
-            dataPayload.push_back(1.0f);
-            // for(int j=0; j<16; j++) dataPayload.push_back(mPtr[j]);
-
-            // dataPayload.push_back(obs.style.color.r);
-            // dataPayload.push_back(obs.style.color.g);
-            // dataPayload.push_back(obs.style.color.b);
-            // dataPayload.push_back(0.6f); // Alpha
-        }
-
         glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        
-        // 关键：传 NULL 告诉驱动程序“旧数据不要了，直接给我在显存开新空间”
-        // 这样 CPU 就不需要等待上一帧渲染结束，彻底消除卡顿
-        size_t totalBufferSize = maxSize * (sizeof(glm::mat4) + sizeof(glm::vec4));
-        glBufferData(GL_ARRAY_BUFFER, totalBufferSize, nullptr, GL_DYNAMIC_DRAW); 
-
-        // 上传新数据
-        glBufferSubData(GL_ARRAY_BUFFER, 0, dataPayload.size() * sizeof(float), dataPayload.data());
-            
-        // glBufferSubData(GL_ARRAY_BUFFER, 0, dataPayload.size() * sizeof(float), dataPayload.data());
+        glBufferSubData(GL_ARRAY_BUFFER, 0,
+                        (GLsizeiptr)(currentCount * 20 * sizeof(float)), payload.data());
     }
 
     // 渲染函数
@@ -147,6 +100,7 @@ public:
         shader->use();
         shader->setMat4("view", view);
         shader->setMat4("projection", proj);
+        shader->setFloat("uAlpha", 1.0f); // 边框不透明
         glBindVertexArray(vao);
         glLineWidth(3.0f);
 

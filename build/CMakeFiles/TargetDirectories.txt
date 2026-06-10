@@ -1,3 +1,3 @@
-/home/huojianyu/桌面/data/test/build/CMakeFiles/rebuild_cache.dir
-/home/huojianyu/桌面/data/test/build/CMakeFiles/edit_cache.dir
-/home/huojianyu/桌面/data/test/build/CMakeFiles/app.dir
+/mnt/c/Users/Administrator/Desktop/project/myproject/build/CMakeFiles/app.dir
+/mnt/c/Users/Administrator/Desktop/project/myproject/build/CMakeFiles/edit_cache.dir
+/mnt/c/Users/Administrator/Desktop/project/myproject/build/CMakeFiles/rebuild_cache.dir

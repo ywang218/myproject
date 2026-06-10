@@ -247,29 +247,16 @@ public:
         glDeleteBuffers(1, &instanceVBO);
     }
 
-    void updateData(const std::vector<Polygon>& obstacles) {
-        lastObstacles = obstacles; 
-        currentCount = std::min((int)obstacles.size(), maxSize);
+    // 上传由 Renderer 预计算好的实例数据 (每实例 mat4 + vec4)，本层不再重复算矩阵。
+    // forPicking 是供射线拾取 / label 显示用的轻量副本 (Polygon 已不含 vertices，拷贝很廉价)。
+    void uploadInstances(const std::vector<float>& payload, int count, const std::vector<Polygon>& forPicking) {
+        lastObstacles = forPicking;
+        currentCount = std::min(count, maxSize);
         if (currentCount == 0) return;
 
-        dataPayload.clear();
-        for (int i = 0; i < currentCount; i++) {
-            const auto& obs = obstacles[i];
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, obs.center);
-            model = glm::rotate(model, obs.heading, glm::vec3(0, 0, 1));
-            model = glm::scale(model, obs.size);
-
-            const float* mPtr = glm::value_ptr(model);
-            dataPayload.insert(dataPayload.end(), mPtr, mPtr + 16);
-            dataPayload.push_back(obs.style.color.r);
-            dataPayload.push_back(obs.style.color.g);
-            dataPayload.push_back(obs.style.color.b);
-            dataPayload.push_back(0.6f);
-        }
-
         glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, dataPayload.size() * sizeof(float), dataPayload.data());
+        glBufferSubData(GL_ARRAY_BUFFER, 0,
+                        (GLsizeiptr)(currentCount * 20 * sizeof(float)), payload.data());
     }
 
     int pickObstacle(glm::vec3 rayOrigin, glm::vec3 rayDir) {
@@ -301,6 +288,7 @@ public:
         shader->use();
         shader->setMat4("view", view);
         shader->setMat4("projection", proj);
+        shader->setFloat("uAlpha", 0.6f); // 填充面半透明
         glBindVertexArray(vao);
         glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0, currentCount);
     }

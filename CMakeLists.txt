@@ -61,6 +61,7 @@ include_directories(
     include/renderer
     include/data
     external/glad/include
+    external/glm                # <--- glm 数学库（纯头文件，项目自带）
     ${IMGUI_DIR}               # <--- ImGui 核心头文件
     ${IMGUI_DIR}/backends      # <--- ImGui 后端头文件
 )
