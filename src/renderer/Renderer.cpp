@@ -297,6 +297,18 @@ Renderer::Renderer(int w, int h) : width(w), height(h) {
     edges = std::make_unique<ObstacleEdgeLayer>(300);
     sensorBackend = std::make_unique<MockSensorBackend>(5000000);
 
+    // ★ LOD 模式选择（三选一）：
+    // 【默认】体素密度均衡 LOD：作用于原来的随机 300w~500w 点云，近密远稀，保留稠密观感。
+    pointCloud->setVoxelLOD(true);
+
+    // 【高级·需有组织扫描】重要性/梯度 LOD：对随机点云无意义，仅在有组织扫描下开启。
+    //   要试就把上面 setVoxelLOD 注释掉，并解开下面两行 (scanWidth 必须与 organized width 相同)：
+    // const uint32_t kScanWidth = 1024;
+    // pointCloud->setImportanceLOD(true, kScanWidth);
+    // sensorBackend->setOrganized(true, 128, kScanWidth);
+
+    // 【关闭所有 LOD】恢复原来的「随机散点 + 单趟距离剔除 filter.comp」：以上全部注释即可。
+
     // 把点云图层的三缓冲池交给 worker：它从池里取缓冲写、写完发布
     sensorBackend->start(pointCloud.get());
 }

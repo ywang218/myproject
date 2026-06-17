@@ -1,0 +1,59 @@
+#version 430 core
+layout (local_size_x = 256) in;
+
+// ───────────────────────────────────────────────────────────────────────────
+// 真·梯度上游 pass：对「有组织点云」算局部曲率，写进 pos.w 当作重要性 score。
+//
+// 为什么必须在这里算（而不是 filter shader 里）：
+//   曲率/梯度是邻域特征，要知道每个点的空间邻居。点云一旦摊平成无序数组就丢了邻居。
+//   而 LiDAR 原始数据是「有组织的」：按 ring(线束) × azimuth(方位角) 排成二维 range image，
+//   相邻下标就是空间邻居 → 不需要任何空间搜索结构，O(N) 一趟就能算曲率。
+//
+// 约定布局：idx = ring * uWidth + col。即同一 ring 的点在内存里连续(col 递增)，
+//          azimuth 邻居 = idx ± k(同 ring 内取模)，ring 邻居 = idx ± uWidth。
+//   ★这要求数据生成端按此顺序写入(见 MockSensorBackend 的有组织生成)。
+//
+// 算法：LOAM 式曲率。对同一 ring 上左右各 uHalfWin 个邻居，求位置差之和的模长，
+//      按距离归一(远处点本就稀，不该因此被判高曲率)。高曲率=边/角(重要)，低=平面。
+//
+// 运行顺序：gradient.comp → glMemoryBarrier(SHADER_STORAGE) → filter_voxel_importance.comp
+// ───────────────────────────────────────────────────────────────────────────
+
+struct Point { vec4 pos; vec4 color; };
+
+// 原地读写 inputSSBO：只读 .xyz、只写自己的 .w → 不同 float 偏移，无读写冲突。
+layout(std430, binding = 0) buffer PtBuf { Point points[]; };
+
+uniform uint  uTotalPoints;
+uniform uint  uWidth;      // 每环方位角采样数 (range image 宽度)
+uniform uint  uHalfWin;    // 单侧邻居数 S (典型 5)
+uniform float uCurvScale;  // 曲率 → [0,1] 的缩放系数 (按场景标定)
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    if (idx >= uTotalPoints) return;
+
+    uint ring = idx / uWidth;
+    uint col  = idx % uWidth;
+
+    vec3  Pi = points[idx].pos.xyz;
+    float ri = length(Pi);
+
+    // 同一 ring 上左右邻居的位置差之和 (azimuth 方向取模，360° 扫描首尾相接)
+    vec3 sumDiff = vec3(0.0);
+    uint cnt = 0u;
+    for (uint k = 1u; k <= uHalfWin; ++k) {
+        uint cL = (col + uWidth - (k % uWidth)) % uWidth;
+        uint cR = (col + k) % uWidth;
+        vec3 PL = points[ring * uWidth + cL].pos.xyz;
+        vec3 PR = points[ring * uWidth + cR].pos.xyz;
+        sumDiff += (PL - Pi) + (PR - Pi);
+        cnt += 2u;
+    }
+
+    // 按邻居数与距离归一：平面区 sumDiff≈0(曲率低)，边/角区 sumDiff 大(曲率高)
+    float denom = max(float(cnt) * max(ri, 1e-3), 1e-3);
+    float curv  = length(sumDiff) / denom;
+
+    points[idx].pos.w = clamp(curv * uCurvScale, 0.0, 1.0); // ★ 写回 score
+}

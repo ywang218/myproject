@@ -66,7 +66,169 @@ PointCloudLayer::~PointCloudLayer() {
     glDeleteBuffers(NUM_BUFFERS, inputSSBO);
     glDeleteBuffers(1, &outputSSBO);
     glDeleteBuffers(1, &atomicBuffer);
+    if (voxelTableBuffer) glDeleteBuffers(1, &voxelTableBuffer);
     glDeleteVertexArrays(1, &vao);
+}
+
+// 懒加载体素哈希表 (CAS / importance 共用同一块)。
+static void ensureVoxelTable(GLuint& buf, uint32_t slots) {
+    if (buf) return;
+    glGenBuffers(1, &buf);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, buf);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, slots * sizeof(uint32_t), nullptr, GL_DYNAMIC_COPY);
+}
+
+// 开启/关闭体素密度均衡 LOD (CAS 单趟，作用于任意数据)。首次开启时懒加载 shader 与体素表。
+void PointCloudLayer::setVoxelLOD(bool on) {
+    voxelLOD_ = on;
+    if (on && !voxelCasShader) {
+        voxelCasShader = std::make_unique<Shader>("shaders/filter_voxel.comp");
+        if (voxelCasShader->ID == 0) {
+            std::cerr << "CRITICAL: filter_voxel.comp compile failed!" << std::endl;
+            exit(-1);
+        }
+        ensureVoxelTable(voxelTableBuffer, voxelTableSize);
+        std::cout << "[PointCloud] Voxel-LOD enabled (tableSize=" << voxelTableSize << ")" << std::endl;
+    }
+}
+
+// 体素密度均衡 LOD：清表为 EMPTY(0xFFFFFFFF) → CAS 单趟剔除。复用计时与 fence 语义。
+void PointCloudLayer::runFilterVoxel(int index, const glm::vec3& egoPos, uint32_t count) {
+    filterRuns++;
+    lastInputCount = count;
+    (void)egoPos;
+    glm::vec3 sensorOrigin(0.0f);
+
+    if (qcPending) {
+        GLint avail = 0;
+        glGetQueryObjectiv(queryCompute, GL_QUERY_RESULT_AVAILABLE, &avail);
+        if (avail) {
+            GLuint64 ns = 0;
+            glGetQueryObjectui64v(queryCompute, GL_QUERY_RESULT, &ns);
+            lastComputeMs = (double)ns / 1.0e6;
+            qcPending = false;
+        }
+    }
+    bool measure = !qcPending;
+
+    // 重置 indirect (vertexCount=0)
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, indirectBuffer);
+    uint32_t resetData[4] = { 0, 1, 0, 0 };
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(resetData), resetData);
+
+    // 清体素表为 EMPTY=0xFFFFFFFF (CAS 的空槽哨兵)
+    uint32_t empty = 0xFFFFFFFFu;
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, voxelTableBuffer);
+    glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, &empty);
+
+    voxelCasShader->use();
+    glUniform3fv(glGetUniformLocation(voxelCasShader->ID, "uEgoPos"), 1, &sensorOrigin[0]);
+    glUniform1ui(glGetUniformLocation(voxelCasShader->ID, "uTotalPoints"), (GLuint)count);
+    glUniform1ui(glGetUniformLocation(voxelCasShader->ID, "uTableSize"),   (GLuint)voxelTableSize);
+    glUniform1f (glGetUniformLocation(voxelCasShader->ID, "uMaxRange"),     150.0f);
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, inputSSBO[index]);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, outputSSBO);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, indirectBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, voxelTableBuffer);
+
+    if (measure) glBeginQuery(GL_TIME_ELAPSED, queryCompute);
+    glDispatchCompute((count + 255) / 256, 1, 1);
+    if (measure) { glEndQuery(GL_TIME_ELAPSED); qcPending = true; }
+
+    glMemoryBarrier(GL_COMMAND_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+
+    if (fences[index]) glDeleteSync(fences[index]);
+    fences[index] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+}
+
+// 开启/关闭重要性 LOD。首次开启时懒加载新 shader 与体素表 (此时 GL 上下文已就绪)。
+void PointCloudLayer::setImportanceLOD(bool on, uint32_t scanWidth) {
+    importanceLOD_ = on;
+    scanWidth_ = scanWidth;
+    if (on && !voxelFilterShader) {
+        gradientShader    = std::make_unique<Shader>("shaders/gradient.comp");
+        voxelFilterShader = std::make_unique<Shader>("shaders/filter_voxel_importance.comp");
+        if (gradientShader->ID == 0 || voxelFilterShader->ID == 0) {
+            std::cerr << "CRITICAL: importance-LOD shader compile failed!" << std::endl;
+            exit(-1);
+        }
+        ensureVoxelTable(voxelTableBuffer, voxelTableSize);
+        std::cout << "[PointCloud] Importance-LOD enabled (scanWidth=" << scanWidth
+                  << ", tableSize=" << voxelTableSize << ")" << std::endl;
+    }
+}
+
+// 重要性 LOD 四趟管线：gradient(曲率→pos.w) → 清表 → vote → emit。
+// 复用 runFilter 的 GPU 计时与 fence 语义，外层 consumeAndFilter / draw 逻辑不变。
+void PointCloudLayer::runFilterImportance(int index, const glm::vec3& egoPos, uint32_t count) {
+    filterRuns++;
+    lastInputCount = count;
+    (void)egoPos;
+    glm::vec3 sensorOrigin(0.0f);
+
+    // GPU 计时：先取回上一次结果 (已 available 才取)，再发起本次测量
+    if (qcPending) {
+        GLint avail = 0;
+        glGetQueryObjectiv(queryCompute, GL_QUERY_RESULT_AVAILABLE, &avail);
+        if (avail) {
+            GLuint64 ns = 0;
+            glGetQueryObjectui64v(queryCompute, GL_QUERY_RESULT, &ns);
+            lastComputeMs = (double)ns / 1.0e6;
+            qcPending = false;
+        }
+    }
+    bool measure = !qcPending;
+    if (measure) glBeginQuery(GL_TIME_ELAPSED, queryCompute);
+
+    uint32_t groups = (count + 255) / 256;
+
+    // ── Pass A：gradient ── 对有组织点云算邻域曲率，覆写 pos.w 当 score
+    gradientShader->use();
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, inputSSBO[index]);
+    glUniform1ui(glGetUniformLocation(gradientShader->ID, "uTotalPoints"), (GLuint)count);
+    glUniform1ui(glGetUniformLocation(gradientShader->ID, "uWidth"),       (GLuint)scanWidth_);
+    glUniform1ui(glGetUniformLocation(gradientShader->ID, "uHalfWin"),     5u);
+    glUniform1f (glGetUniformLocation(gradientShader->ID, "uCurvScale"),   50.0f);
+    glDispatchCompute(groups, 1, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT); // 曲率写入对后续 filter 可见
+
+    // 重置 indirect (vertexCount=0)、清体素表为 0 (atomicMax 的空值)
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, indirectBuffer);
+    uint32_t resetData[4] = { 0, 1, 0, 0 };
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(resetData), resetData);
+
+    uint32_t zero = 0u;
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, voxelTableBuffer);
+    glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, &zero);
+
+    // ── Pass B/C：vote + emit ──
+    voxelFilterShader->use();
+    glUniform3fv(glGetUniformLocation(voxelFilterShader->ID, "uEgoPos"), 1, &sensorOrigin[0]);
+    glUniform1ui(glGetUniformLocation(voxelFilterShader->ID, "uTotalPoints"), (GLuint)count);
+    glUniform1ui(glGetUniformLocation(voxelFilterShader->ID, "uTableSize"),   (GLuint)voxelTableSize);
+    glUniform1f (glGetUniformLocation(voxelFilterShader->ID, "uMaxRange"),     150.0f);
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, inputSSBO[index]);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, outputSSBO);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, indirectBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, voxelTableBuffer);
+
+    GLint uPassLoc = glGetUniformLocation(voxelFilterShader->ID, "uPass");
+
+    glUniform1ui(uPassLoc, 0u);             // 投票
+    glDispatchCompute(groups, 1, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT); // 投票必须全完成，落地才能读赢家
+
+    glUniform1ui(uPassLoc, 1u);             // 落地
+    glDispatchCompute(groups, 1, 1);
+
+    if (measure) { glEndQuery(GL_TIME_ELAPSED); qcPending = true; }
+
+    glMemoryBarrier(GL_COMMAND_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+
+    if (fences[index]) glDeleteSync(fences[index]);
+    fences[index] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 }
 
 // void PointCloudLayer::render(const glm::mat4& view, const glm::mat4& projection, const glm::vec3& egoPos) {
@@ -197,6 +359,9 @@ bool PointCloudLayer::consumeAndFilter() {
 
 // [渲染线程内部] 绑定 inputSSBO[index]、按 count 设 uTotalPoints、dispatch、屏障，并打 fence。
 void PointCloudLayer::runFilter(int index, const glm::vec3& egoPos, uint32_t count) {
+    if (importanceLOD_) { runFilterImportance(index, egoPos, count); return; }
+    if (voxelLOD_)      { runFilterVoxel(index, egoPos, count); return; }
+
     filterRuns++;
     lastInputCount = count;
 

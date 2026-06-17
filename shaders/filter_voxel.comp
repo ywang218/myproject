@@ -1,0 +1,120 @@
+#version 430 core
+layout (local_size_x = 256) in;
+
+// ───────────────────────────────────────────────────────────────────────────
+// 多分辨率体素栅格降采样 (八叉树分层 LOD 的「扁平等价物」)
+//
+// 为什么不用真八叉树：10~20Hz 流式点云每帧空间分布全变，每帧重建树不划算。
+// 体素栅格「重建」只是：清空一块定长哈希表(O(表大小)) + 一趟 O(N) compute，
+// 无递归/无指针/无排序/无 CPU 同步 → 每帧重建几乎免费。
+//
+// 「分层 LOD」靠 voxelSize(d) 随距离变大实现：近处体素小(密)、远处体素大(稀)。
+// 每个体素只保留一个代表点 → 空间均匀降采样，不受输入点顺序影响(解决 idx % N 的伪影)。
+// ───────────────────────────────────────────────────────────────────────────
+
+struct Point {
+    vec4 pos;
+    vec4 color;
+};
+
+// 绑定点 0: 原始全量数据 (与旧 filter.comp 一致)
+layout(std430, binding = 0) readonly buffer InBuf { Point inPoints[]; };
+// 绑定点 1: 过滤后的紧凑数据
+layout(std430, binding = 1) writeonly buffer OutBuf { Point outPoints[]; };
+// 绑定点 2: indirect 绘制指令 (CPU 通过 glDrawArraysIndirect 读取)
+layout(std430, binding = 2) buffer IndirectBuf {
+    uint vertexCount;
+    uint instanceCount;
+    uint firstVertex;
+    uint baseInstance;
+} indirect;
+// 绑定点 3: ★新增★ 体素哈希表。每帧 dispatch 前需被清成 EMPTY(0xFFFFFFFF)。
+layout(std430, binding = 3) buffer VoxelTable { uint voxelTable[]; };
+
+uniform vec3  uEgoPos;       // LOD 参考点 (距传感器=vec3(0)，或传相机位置做渲染LOD)
+uniform uint  uTotalPoints;  // 本帧实际点数
+uniform uint  uTableSize;    // 哈希表槽数 (建议 ≈ 预期输出点数 × 3，且为质数更佳)
+uniform float uMaxRange;     // 超出此距离的点直接剔除 (LiDAR 量程裁剪)
+
+const uint EMPTY     = 0xFFFFFFFFu; // 空槽哨兵
+const uint MAX_PROBE = 32u;         // 线性探测上限
+
+// 组内压缩用的共享变量 (与旧 shader 相同，降低对 indirect.vertexCount 的全局原子争用)
+shared uint groupCount;
+shared uint groupOffset;
+shared uint localIndices[256];
+
+// 距离 → 体素边长：这就是「分层」。阈值/边长按你的场景调。
+// 近处 0.2m 精细，远处 4m 粗糙 → 屏幕上密度更均匀，远处自动抽稀。
+float voxelSize(float d) {
+    if      (d < 20.0)  return 0.2;
+    else if (d < 50.0)  return 0.5;
+    else if (d < 100.0) return 1.5;
+    else                return 4.0;
+}
+
+// 体素坐标打包成唯一 32-bit key。
+// 各轴 ±512 (10 bit)；由 voxelSize 与 uMaxRange 保证坐标在此范围内
+// (例: d<20 用 0.2m → |coord|<100；d<150 用 4m → |coord|<38)。
+// 打包值唯一 → 后面 prev==key 判断精确，不会误丢点。最高仅用 30 bit，绝不等于 EMPTY。
+uint packVoxel(ivec3 c) {
+    uvec3 u = uvec3(c + 512);
+    return (u.x & 0x3FFu) | ((u.y & 0x3FFu) << 10) | ((u.z & 0x3FFu) << 20);
+}
+
+// 抢占体素：返回 true 表示「我是这个体素的第一个点」(代表点，保留)。
+// Knuth 乘法散列定位起始槽 + 线性探测解决槽冲突。
+bool claimVoxel(uint key) {
+    uint start = (key * 2654435761u) % uTableSize;
+    for (uint p = 0u; p < MAX_PROBE; ++p) {
+        uint s = (start + p) % uTableSize;
+        uint prev = atomicCompSwap(voxelTable[s], EMPTY, key);
+        if (prev == EMPTY) return true;  // 抢到空槽 → 代表点
+        if (prev == key)   return false; // 同一体素已被占 → 丢弃
+        // 否则该槽属于别的体素 → 继续探测下一个槽
+    }
+    return true; // 探测溢出(表太满) → 保守保留，避免丢点。出现说明 uTableSize 偏小。
+}
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    uint localIdx = gl_LocalInvocationID.x;
+
+    // 1. 初始化组内共享计数
+    if (localIdx == 0u) groupCount = 0u;
+    barrier();
+
+    // 2. 决定是否保留：量程裁剪 + 体素去重(分层 LOD)
+    bool keep = false;
+    if (idx < uTotalPoints) {
+        vec3 p = inPoints[idx].pos.xyz;
+        float d = distance(p, uEgoPos);
+        if (d <= uMaxRange) {
+            float vs = voxelSize(d);
+            ivec3 vc = ivec3(floor(p / vs));
+            keep = claimVoxel(packVoxel(vc));
+        }
+    }
+
+    // 3. 组内原子累加，拿到组内相对偏移 (与旧 shader 完全一致)
+    uint myLocalOffset = 0u;
+    if (keep) {
+        myLocalOffset = atomicAdd(groupCount, 1u);
+        localIndices[myLocalOffset] = idx;
+    }
+    barrier();
+
+    // 4. 代表线程为全组申请全局写入空间
+    if (localIdx == 0u && groupCount > 0u) {
+        groupOffset = atomicAdd(indirect.vertexCount, groupCount);
+    }
+    barrier();
+
+    // 5. 批量写入紧凑输出
+    if (keep) {
+        uint writeIdx = groupOffset + myLocalOffset;
+        if (writeIdx < uTotalPoints) {
+            outPoints[writeIdx] = inPoints[localIndices[myLocalOffset]];
+        }
+    }
+}

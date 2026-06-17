@@ -81,10 +81,23 @@ public:
     // 回读当前 indirect buffer 里的实际绘制点数 (会触发同步，建议每秒调一次)
     uint32_t readDrawnCount();
 
+    // 开启「体素密度均衡 LOD」(filter_voxel.comp，CAS 单趟)。
+    // ★ 作用于任意数据 (含你原来的随机点云)，不需要有组织扫描。近密远稀，保留稠密观感。
+    void setVoxelLOD(bool on);
+
+    // 开启「重要性 LOD」管线 (gradient.comp 算曲率 → filter_voxel_importance.comp 体素选点)。
+    // ★ 需要有组织扫描数据 (MockSensorBackend::setOrganized)，scanWidth 必须与其 width 相同；
+    //   对随机点云无意义。懒加载，默认路径零影响。
+    void setImportanceLOD(bool on, uint32_t scanWidth = 1024);
+
 private:
     // [渲染线程内部] 执行 compute 剔除：绑定 inputSSBO[index]、按 count 设 uTotalPoints、
     // dispatch、屏障，并对该缓冲打 fence。
     void runFilter(int index, const glm::vec3& egoPos, uint32_t count);
+    // [渲染线程内部] 体素密度均衡 LOD：清表(0xFFFFFFFF) → CAS 单趟剔除，并打 fence。
+    void runFilterVoxel(int index, const glm::vec3& egoPos, uint32_t count);
+    // [渲染线程内部] 重要性 LOD 四趟管线：gradient → 清表 → vote → emit，并打 fence。
+    void runFilterImportance(int index, const glm::vec3& egoPos, uint32_t count);
 
     // ╔══════════════════════════════════════════════════════════════════╗
     // ║ 【手搓 三缓冲 + FENCE】之一：数据结构                                  ║
@@ -108,6 +121,16 @@ private:
     std::unique_ptr<Shader> filterShader; // 计算着色器 (Compute Shader)
 
     GLuint indirectBuffer; // 用于存储绘制指令
+
+    // --- 重要性 LOD 管线资源 (懒加载，仅 setImportanceLOD(true) 后存在) ---
+    std::unique_ptr<Shader> voxelCasShader;     // filter_voxel.comp：CAS 单趟体素 LOD
+    std::unique_ptr<Shader> gradientShader;     // gradient.comp：算邻域曲率写 pos.w
+    std::unique_ptr<Shader> voxelFilterShader;  // filter_voxel_importance.comp：体素选点
+    GLuint   voxelTableBuffer = 0;              // 体素哈希表 (每帧清空，CAS=0xFFFFFFFF / atomicMax=0)
+    uint32_t voxelTableSize = (1u << 21);       // 2,097,152 槽 = 8MB，足够随机 300w~500w 点的保留集
+    bool     voxelLOD_ = false;
+    bool     importanceLOD_ = false;
+    uint32_t scanWidth_ = 1024;                // = 有组织扫描的 azimuth 宽度
 
     // --- 三缓冲调度状态 (worker 与渲染线程共享，poolMtx 保护) ---
     std::mutex poolMtx;
